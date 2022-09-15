@@ -34,7 +34,7 @@ export default function BotResponseOptions({
   return (
     <ListItemWrapper>
       <Animated.View ref={ref} style={[componentStyles.container, animatedStyle, style]}>
-        <Text style={[styles.textXSmall, componentStyles.title]}>Suggested replies</Text>
+        <Text style={[styles.textXSmall, componentStyles.title]}>Select a message</Text>
         {options.map((option, index) => {
           return (
             <SuggestedReplyOption

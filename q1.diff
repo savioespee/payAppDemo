@@ -1,0 +1,367 @@
+From f54f32aa7da28687243ce5c237dcbfcc5e3eaff9 Mon Sep 17 00:00:00 2001
+From: Alan Choi <alan.choi@sendbird.com>
+Date: Wed, 14 Sep 2022 20:23:29 -0700
+Subject: [PATCH] transition state on action press
+
+---
+ api/handleChannelStateTransition.ts |   8 +-
+ constants/scenario.ts               | 171 ++++++++++++++--------------
+ utils/logError.ts                   |  10 ++
+ 3 files changed, 98 insertions(+), 91 deletions(-)
+ create mode 100644 utils/logError.ts
+
+diff --git a/api/handleChannelStateTransition.ts b/api/handleChannelStateTransition.ts
+index a3fdb5b..f10c56a 100644
+--- a/api/handleChannelStateTransition.ts
++++ b/api/handleChannelStateTransition.ts
+@@ -1,6 +1,7 @@
+ import axios from 'axios';
+ 
+ import delay from '../utils/delay';
++import logError from '../utils/logError';
+ import {
+   addReactionsToMessage,
+   convertMessagesToPayloadArray__TMP,
+@@ -61,11 +62,6 @@ export default async function handleChannelStateTransition(userId: string, chann
+       setChannelState({ channelUrl, state: targetState, userId });
+     }
+   } catch (error) {
+-    if (axios.isAxiosError(error)) {
+-      console.error(error.toJSON());
+-      console.error(`Response body: ${JSON.stringify(error.response?.data)}`);
+-    } else {
+-      console.error(error);
+-    }
++    logError(error);
+   }
+ }
+diff --git a/constants/scenario.ts b/constants/scenario.ts
+index fa1b0c5..e4b98e9 100644
+--- a/constants/scenario.ts
++++ b/constants/scenario.ts
+@@ -1,6 +1,6 @@
+-import { leaveChannel } from '../api/platformAPI';
+-import { getMessageData, parseMessageData } from '../utils/dataUtils';
+-import delay from '../utils/delay';
++import { inviteUser, leaveChannel } from '../api/platformAPI';
++import { parseMessageData } from '../utils/dataUtils';
++import logError from '../utils/logError';
+ import { botUserIds } from './botUsers';
+ import { channelCustomTypes, messageCustomTypes } from './common';
+ 
+@@ -27,22 +27,22 @@ export const scenario: ScenarioData = {
+           ],
+           onChannelEnter(context) {
+             context.transitionState('botMessages');
+-          },      
++          },
+         },
+-        botMessages:{
+-          messages:[
++        botMessages: {
++          messages: [
+             {
+-            sender: botUserIds.supportBot,
++              sender: botUserIds.supportBot,
+             content: 'Please confirm that you have read and agreed with SendFood’s Data Privacy Policy here https://www.sendfood.com/privacy',
+             },
+             {
+-            sender: botUserIds.supportBot,
+-            content: 'Please confirm if you would like to continue?',
++              sender: botUserIds.supportBot,
++              content: 'Please confirm if you would like to continue?',
+             },
+           ],
+           after: { targetState: 'AlexReplies1' },
+         },
+-        AlexReplies1:{
++        AlexReplies1: {
+           suggestedReplies: [['Yes', 'botChecksIssue'], 'No'],
+         },
+         botChecksIssue: {
+@@ -51,13 +51,13 @@ export const scenario: ScenarioData = {
+               sender: botUserIds.supportBot,
+               customType: messageCustomTypes.orderConfirmation,
+               content: 'Hi Alex, is this the order that you would like enquire about?',
+-              data:{
++              data: {
+                 orderInfo: {
+                   price: '$30.10',
+-                  product:'Maninara',
++                  product: 'Maninara',
+                   paymentMethod: 'AMEX ****0001',
+                   address: '400 1st Ave, San Mateo',
+-                  localImageName:'orderConfirmation.png',
++                  localImageName: 'orderConfirmation.png',
+                   title: 'Order Id: #0000-1111',
+                 },
+               },
+@@ -65,11 +65,11 @@ export const scenario: ScenarioData = {
+           ],
+           after: { targetState: 'AlexReplies2' },
+         },
+-        AlexReplies2:{
++        AlexReplies2: {
+           suggestedReplies: [['Yes', 'AlexReplies3'], 'No'],
+         },
+-        AlexReplies3:{
+-          messages:[
++        AlexReplies3: {
++          messages: [
+             {
+               sender: 'ME',
+               content: 'The delivery was terribly late today!',
+@@ -77,18 +77,18 @@ export const scenario: ScenarioData = {
+           ],
+           after: { targetState: 'botReplies2' },
+         },
+-        botReplies2:{
+-          messages:[
++        botReplies2: {
++          messages: [
+             {
+               sender: botUserIds.supportBot,
+               content: 'I’m sorry to hear that.',
+-            }, 
++            },
+             {
+               sender: botUserIds.supportBot,
+               content: ' Let me connect you to a live agent. Please hold.',
+-            }, 
+-          ],   
+-           after: { delay: 1000, targetState: 'agentConnected' },
++            },
++          ],
++          after: { delay: 1000, targetState: 'agentConnected' },
+         },
+         agentConnected: {
+           messages: [
+@@ -111,13 +111,13 @@ export const scenario: ScenarioData = {
+         AlexReplies: {
+           messages: [
+             {
+-            sender: 'ME',
+-            content:'Hi Daniel, thanks for helping out.', 
++              sender: 'ME',
++              content: 'Hi Daniel, thanks for helping out.',
+             },
+           ],after: { delay: 1000, targetState: 'agentSendVoucher' },
+         },
+-        agentSendVoucher:{
+-          messages:[
++        agentSendVoucher: {
++          messages: [
+             {
+               sender: botUserIds.daniel,
+               customType: messageCustomTypes.marketing,
+@@ -125,31 +125,32 @@ export const scenario: ScenarioData = {
+               data: { cover: 'voucher.png', actions: [{ label: 'Claim Now', variant: 'light' }] },
+             },
+           ],
+-          // async onActionPress(data, context) {
+-          //    const  { channelUrl }  = context
+-          //    console.log("channelUrl: ",channelUrl);
+-             
+-          //    await context.sendMessage({
+-          //     channelUrl,
+-          //     message:{
+-          //       sender:botUserIds.supportBot,
+-          //        content: "You claimed the voucher'",
+-          //     },
+-          
+-          //    })
+-             
+-          //    context.transitionState('alexSaysThanks');
++          async onActionPress(data, context) {
++            const { channelUrl } = context;
++            console.log('channelUrl: ', channelUrl);
+ 
+-          // }, 
+-           after: { targetState: 'alexSaysThanks' },
++            try {
++              await inviteUser(channelUrl, botUserIds.supportBot);
++              await context.sendMessage({
++                channelUrl,
++                message: {
++                  sender: botUserIds.supportBot,
++                  content: 'You claimed the voucher.',
++                },
++              });
++              context.transitionState('alexSaysThanks');
++            } catch (error) {
++              logError(error);
++            }
++          },
+         },
+         alexSaysThanks: {
+-           messages:[
++          messages: [
+             {
+-            sender:'ME',
+-            content: 'That is wonderful! 😃',
++              sender: 'ME',
++              content: 'That is wonderful! 😃',
+             },
+-        ],
++          ],
+           after: { targetState: 'byeFromDaniel' },
+         },
+         byeFromDaniel: {
+@@ -205,99 +206,99 @@ export const scenario: ScenarioData = {
+               createdAt:'-30m'
+             },
+             {
+-               sender: botUserIds.casey,
+-               customType: messageCustomTypes.audio,
+-               content: {
++              sender: botUserIds.casey,
++              customType: messageCustomTypes.audio,
++              content: {
+                 url: 'https://dxstmhyqfqr1o.cloudfront.net/inbox-demo/uploads/voicememo.m4a',
+                 type: 'audio/m4a',
+               },
+               createdAt: '-25m',
+-            },  
++            },
+            
+-          ],  
++          ],
+           onChannelEnter(context) {
+             context.transitionState('driverReplies1');
+-          },      
+-        },//individual state
++          },
++        }, //individual state
+         driverReplies1: {
+           messages: [
+             {
+               sender: botUserIds.casey,
+-              content:'I am still quite some distances away',
++              content: 'I am still quite some distances away',
+             },
+             {
+               sender: botUserIds.casey,
+               customType: messageCustomTypes.map,
+-              content:'ETA 30 mins',
++              content: 'ETA 30 mins',
+             },
+           ],
+-          after: { targetState: 'alexReplies1' },  
++          after: { targetState: 'alexReplies1' },
+         },
+-        alexReplies1:{
+-          messages:[
++        alexReplies1: {
++          messages: [
+             {
+               sender: 'ME',
+-              content:'So far away??? what the fuck!!!',
++              content: 'So far away??? what the fuck!!!',
+             },
+           ],
+-          after: { delay: 2000, targetState: 'driverReplies2' }, 
+-        },   
+-        driverReplies2:{
+-          messages:[
++          after: { delay: 2000, targetState: 'driverReplies2' },
++        },
++        driverReplies2: {
++          messages: [
+             {
+               sender: botUserIds.casey,
+-              content:'yeah, sorry traffic was terrible. I am approaching your street now',
++              content: 'yeah, sorry traffic was terrible. I am approaching your street now',
+             },
+             {
+               sender: botUserIds.casey,
+-              content:'I am at your building now, waiting at the reception front desk',
++              content: 'I am at your building now, waiting at the reception front desk',
+             },
+           ], after: { delay: 1000, targetState: 'driverReplies3' }, 
+         },
+-        driverReplies3:{
+-          messages:[
++        driverReplies3: {
++          messages: [
+             {
+-                sender: botUserIds.casey,
+-                content:{
+-                  url: 'https://lh3.googleusercontent.com/R_JwvfGK0uDZsG3P3eq-zElMv_lpTV-AGAzk8na2NZ-stisI22dwg66ifcCYD51CzM4=w2400',
+-                  type: 'image/jpg',
+-                },
++              sender: botUserIds.casey,
++              content: {
++                url: 'https://lh3.googleusercontent.com/R_JwvfGK0uDZsG3P3eq-zElMv_lpTV-AGAzk8na2NZ-stisI22dwg66ifcCYD51CzM4=w2400',
++                type: 'image/jpg',
++              },
+                 
+             },
+ 
+           ],  after: { targetState: 'alexReplies2' }, 
+         },
+-        alexReplies2:{
+-          messages:[
++        alexReplies2: {
++          messages: [
+             {
+               sender: "ME",
+-              content:'Ok, I will come to pick it up',
++              content: 'Ok, I will come to pick it up',
+               reactions: [{ emoji: '+1', userIds: [botUserIds.casey] }],
+             },
+           ],
+-          after: { delay: 1000,  targetState: 'driverReplies4' }, 
+-        }, 
+-        driverReplies4:{
+-          messages:[
++          after: { delay: 1000, targetState: 'driverReplies4' },
++        },
++        driverReplies4: {
++          messages: [
+             {
+               sender: botUserIds.casey,
+-              content:'Thank you',
++              content: 'Thank you',
+             },
+             {
+               sender: botUserIds.casey,
+-              content:'Sorry about the delay',
++              content: 'Sorry about the delay',
+             },
+           ], after: { delay: 1000,  targetState: 'alexReplies3' }, 
+         },
+         alexReplies3: {
+-          messages:[
++          messages: [
+             {
+               sender: 'ME',
+-              content:'😡',
++              content: '😡',
+             },
+           ],
+         },
+-      },//state
+-    },//channel
++      }, //state
++    }, //channel
+   ],
+ };
+diff --git a/utils/logError.ts b/utils/logError.ts
+new file mode 100644
+index 0000000..e7b2019
+--- /dev/null
++++ b/utils/logError.ts
+@@ -0,0 +1,10 @@
++import axios from 'axios';
++
++export default function logError(error: unknown) {
++  if (axios.isAxiosError(error)) {
++    console.error(error.toJSON());
++    console.error(`Response body: ${JSON.stringify(error.response?.data)}`);
++  } else {
++    console.error(error);
++  }
++}
+-- 
+2.37.0 (Apple Git-136)
+

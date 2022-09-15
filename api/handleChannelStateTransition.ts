@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import delay from '../utils/delay';
+import logError from '../utils/logError';
 import {
   addReactionsToMessage,
   convertMessagesToPayloadArray__TMP,
@@ -61,11 +62,6 @@ export default async function handleChannelStateTransition(userId: string, chann
       setChannelState({ channelUrl, state: targetState, userId });
     }
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error(error.toJSON());
-      console.error(`Response body: ${JSON.stringify(error.response?.data)}`);
-    } else {
-      console.error(error);
-    }
+    logError(error);
   }
 }
