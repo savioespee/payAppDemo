@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "ES2020",
+    "strict": true,
+    "noImplicitAny": false,
+    "resolveJsonModule": true
+  },
+  "extends": "expo/tsconfig.base",
+  "ts-node": {
+    "files": true,
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
+}

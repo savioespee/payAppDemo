@@ -1,0 +1,136 @@
+diff --git a/dist/components/ImageItem/ImageItem.web.js b/dist/components/ImageItem/ImageItem.web.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..ebef5241b230ff3f7d03344b4e19ae2af10b9468
+--- /dev/null
++++ b/dist/components/ImageItem/ImageItem.web.js
+@@ -0,0 +1,2 @@
++import ImageItem from "./ImageItem.android";
++export default ImageItem;
+diff --git a/dist/hooks/useImageDimensions.js b/dist/hooks/useImageDimensions.js
+index d89a3a1280968b3b48b10f4e8ddaf164e23ee1b7..5d4f8b375309d2f2792c622deb27186cf99cc69b 100644
+--- a/dist/hooks/useImageDimensions.js
++++ b/dist/hooks/useImageDimensions.js
+@@ -5,60 +5,74 @@
+  * LICENSE file in the root directory of this source tree.
+  *
+  */
+-import { useEffect, useState } from "react";
+-import { Image } from "react-native";
+-import { createCache } from "../utils";
++import { useEffect, useState } from 'react';
++import { Image, Platform } from 'react-native';
++import { createCache } from '../utils';
+ const CACHE_SIZE = 50;
+ const imageDimensionsCache = createCache(CACHE_SIZE);
+ const useImageDimensions = (image) => {
+-    const [dimensions, setDimensions] = useState(null);
+-    const getImageDimensions = (image) => {
+-        return new Promise((resolve) => {
+-            if (typeof image == "number") {
+-                const cacheKey = `${image}`;
+-                let imageDimensions = imageDimensionsCache.get(cacheKey);
+-                if (!imageDimensions) {
+-                    const { width, height } = Image.resolveAssetSource(image);
+-                    imageDimensions = { width, height };
+-                    imageDimensionsCache.set(cacheKey, imageDimensions);
+-                }
+-                resolve(imageDimensions);
+-                return;
++  const [dimensions, setDimensions] = useState(null);
++  const getImageDimensions = (image) => {
++    return new Promise((resolve) => {
++      if (typeof image == 'number') {
++        const cacheKey = `${image}`;
++        let imageDimensions = imageDimensionsCache.get(cacheKey);
++        if (!imageDimensions) {
++          const { width, height } = Image.resolveAssetSource(image);
++          imageDimensions = { width, height };
++          imageDimensionsCache.set(cacheKey, imageDimensions);
++        }
++        resolve(imageDimensions);
++        return;
++      }
++      // @ts-ignore
++      if (image.uri) {
++        const source = image;
++        const cacheKey = source.uri;
++        const imageDimensions = imageDimensionsCache.get(cacheKey);
++        if (imageDimensions) {
++          resolve(imageDimensions);
++        } else if (Platform.OS === 'web') {
++          Image.getSize(
++            source.uri,
++            (width, height) => {
++              imageDimensionsCache.set(cacheKey, { width, height });
++              resolve({ width, height });
++            },
++            () => {
++              resolve({ width: 0, height: 0 });
+             }
+-            // @ts-ignore
+-            if (image.uri) {
+-                const source = image;
+-                const cacheKey = source.uri;
+-                const imageDimensions = imageDimensionsCache.get(cacheKey);
+-                if (imageDimensions) {
+-                    resolve(imageDimensions);
+-                }
+-                else {
+-                    // @ts-ignore
+-                    Image.getSizeWithHeaders(source.uri, source.headers, (width, height) => {
+-                        imageDimensionsCache.set(cacheKey, { width, height });
+-                        resolve({ width, height });
+-                    }, () => {
+-                        resolve({ width: 0, height: 0 });
+-                    });
+-                }
++          );
++        } else {
++          // @ts-ignore
++          Image.getSizeWithHeaders(
++            source.uri,
++            source.headers,
++            (width, height) => {
++              imageDimensionsCache.set(cacheKey, { width, height });
++              resolve({ width, height });
++            },
++            () => {
++              resolve({ width: 0, height: 0 });
+             }
+-            else {
+-                resolve({ width: 0, height: 0 });
+-            }
+-        });
++          );
++        }
++      } else {
++        resolve({ width: 0, height: 0 });
++      }
++    });
++  };
++  let isImageUnmounted = false;
++  useEffect(() => {
++    getImageDimensions(image).then((dimensions) => {
++      if (!isImageUnmounted) {
++        setDimensions(dimensions);
++      }
++    });
++    return () => {
++      isImageUnmounted = true;
+     };
+-    let isImageUnmounted = false;
+-    useEffect(() => {
+-        getImageDimensions(image).then((dimensions) => {
+-            if (!isImageUnmounted) {
+-                setDimensions(dimensions);
+-            }
+-        });
+-        return () => {
+-            isImageUnmounted = true;
+-        };
+-    }, [image]);
+-    return dimensions;
++  }, [image]);
++  return dimensions;
+ };
+ export default useImageDimensions;
