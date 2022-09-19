@@ -32,6 +32,7 @@ export const typeAndSendMessage = async ({
       custom_type: messageCustomTypes.typingIndicator,
       user_id: userId,
       message: 'Typing...',
+      created_at: messageParams.created_at,
     });
     await delay(typingDuration);
     return editMessage(channelUrl, messageId, {

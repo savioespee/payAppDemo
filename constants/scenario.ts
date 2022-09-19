@@ -1,8 +1,10 @@
-import { inviteUser, leaveChannel } from '../api/platformAPI';
+import { inviteUser, leaveChannel, sendMessage } from '../api/platformAPI';
 import { parseMessageData } from '../utils/dataUtils';
 import logError from '../utils/logError';
 import { botUserIds } from './botUsers';
 import { channelCustomTypes, messageCustomTypes } from './common';
+import { sendMessageAndTranslate } from '../api/utils';
+
 
 export const scenario: ScenarioData = {
   key: 'toss',
@@ -43,7 +45,7 @@ export const scenario: ScenarioData = {
           after: { targetState: 'AlexReplies1' },
         },
         AlexReplies1: {
-          suggestedReplies: [['Yes', 'botChecksIssue'], 'No'],
+          suggestedReplies: [['Confirm', 'botChecksIssue'], 'Cancel'],
         },
         botChecksIssue: {
           messages: [
@@ -125,21 +127,19 @@ export const scenario: ScenarioData = {
               data: { cover: 'voucher.png', actions: [{ label: 'Claim Now', variant: 'light' }] },
             },
           ],
-          async onActionPress(data, context) {
-            const { channelUrl } = context;
-            console.log('channelUrl: ', channelUrl);
 
+          async onActionPress(data, {transitionState}) {
+            const { channelUrl } = data.message;
             try {
               await inviteUser(channelUrl, botUserIds.supportBot);
-              await context.sendMessage({
-                channelUrl,
-                message: {
-                  customType:messageCustomTypes.notification,
-                  sender: botUserIds.supportBot,
-                  content: '🎉 Congratulation!!! You have successfully claimed your $30 SendFood voucher.',
+              await sendMessageAndTranslate(
+                channelUrl, {
+                  message_type: 'MESG',
+                  user_id: botUserIds.supportBot,
+                  message:  '🎉 Congratulation!!! 🎉\nYou have successfully claimed your $30 SendFood voucher.',
                 },
-              });
-              context.transitionState('alexSaysThanks');
+              ),
+              transitionState('alexSaysThanks');
             } catch (error) {
               logError(error);
             }
@@ -204,7 +204,7 @@ export const scenario: ScenarioData = {
             {
               sender: 'ME',
               content: 'Hey, any update on arrival time?',
-              createdAt:'-30m'
+              createdAt:'-35m'
             },
             {
               sender: botUserIds.casey,
@@ -213,7 +213,7 @@ export const scenario: ScenarioData = {
                 url: 'https://dxstmhyqfqr1o.cloudfront.net/inbox-demo/uploads/voicememo.m4a',
                 type: 'audio/m4a',
               },
-              createdAt: '-25m',
+              createdAt: '-32m',
             },
            
           ],
@@ -226,11 +226,13 @@ export const scenario: ScenarioData = {
             {
               sender: botUserIds.casey,
               content: 'I am still quite some distances away',
+              createdAt:'-30m',
             },
             {
               sender: botUserIds.casey,
               customType: messageCustomTypes.map,
               content: 'ETA 30 mins',
+              createdAt:'-30m',
             },
           ],
           after: { targetState: 'alexReplies1' },
@@ -240,6 +242,7 @@ export const scenario: ScenarioData = {
             {
               sender: 'ME',
               content: 'So far away??? what the fuck!!!',
+              createdAt:'-29m',
             },
           ],
           after: { delay: 2000, targetState: 'driverReplies2' },

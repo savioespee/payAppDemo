@@ -5,13 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AssetBlockImage from '../../../components/AssetBlockImage';
 import Hotspot from '../../../components/Hotspot';
 
-export default function EntryScreen1() {
+export default function NewEntryScreen1() {
   return (
     <View style={{ flex: 1}}>
       <StatusBar style="dark" />
       <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white', position: 'relative' }} edges={['top']}>
-          <AssetBlockImage source={require('../../../assets/GetStarted.png')} />
+          <AssetBlockImage source={require('../../../assets/Addtocart.png')} />
         </SafeAreaView>
       </ScrollView>
       <SafeAreaView style={{ backgroundColor: 'white', position: 'relative' }} edges={['bottom']}>

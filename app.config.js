@@ -2,7 +2,7 @@ export default {
   name: 'SendFood Demo',
   description: 'Sales vertical demo, on-demand',
   slug: 'SendFood-demo',
-  version: '1.0.0',
+  version: '1.0.1',
   orientation: 'portrait',
   icon: './assets/appFoodLogo.png',
   owner: 'sales-demo',
