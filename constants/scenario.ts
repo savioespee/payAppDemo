@@ -56,7 +56,7 @@ export const scenario: ScenarioData = {
               data: {
                 orderInfo: {
                   price: '$30.10',
-                  product: 'Maninara',
+                  product: 'Marinara',
                   paymentMethod: 'AMEX ****0001',
                   address: '400 1st Ave, San Mateo',
                   localImageName: 'orderConfirmation.png',
@@ -68,7 +68,20 @@ export const scenario: ScenarioData = {
           after: { targetState: 'AlexReplies2' },
         },
         AlexReplies2: {
-          suggestedReplies: [['Yes', 'AlexReplies3'], 'No'],
+          suggestedReplies: [['Yes', 'AlexReplies2_1'], 'No'],
+        },
+        AlexReplies2_1: {
+          messages:[
+          ],after: { delay: 1000, targetState: 'agentConfirmed' },
+        },
+        agentConfirmed: {
+          messages:[
+            
+              {
+                sender: botUserIds.supportBot,
+                content: 'Thank you for the confirmation',
+              },
+          ],after: { delay: 3000, targetState: 'AlexReplies3' },
         },
         AlexReplies3: {
           messages: [
@@ -77,7 +90,7 @@ export const scenario: ScenarioData = {
               content: 'The delivery was terribly late today!',
             },
           ],
-          after: { targetState: 'botReplies2' },
+          after: { delay: 2000, targetState: 'botReplies2' },
         },
         botReplies2: {
           messages: [
@@ -99,13 +112,18 @@ export const scenario: ScenarioData = {
               content:
                 'Hey Alex, I see you’re having issue with your delivery.',
             },
+          ],
+          after: { delay : 2000 ,targetState: 'agentConnected1' },
+        },
+        agentConnected1: {
+          messages: [
             {
               sender: botUserIds.daniel,
               content:
                 ' We’d like to cover the cost of this order to make up for the inconvenience.',
             },
           ],
-          after: { targetState: 'AlexReplies' },
+          after: { delay: 3000, targetState: 'AlexReplies' },
           onEntry(context) {
             return leaveChannel(context.channelUrl, botUserIds.supportBot);
           },
@@ -139,11 +157,16 @@ export const scenario: ScenarioData = {
                   message:  '🎉 Congratulation!!! 🎉\nYou have successfully claimed your $30 SendFood voucher.',
                 },
               ),
-              transitionState('alexSaysThanks');
+              transitionState('alexSaysThanksbefore');
             } catch (error) {
               logError(error);
             }
           },
+        },
+        alexSaysThanksbefore: {
+          messages: [
+          ],
+          after: { delay: 2000, targetState: 'alexSaysThanks' },
         },
         alexSaysThanks: {
           messages: [
@@ -152,7 +175,7 @@ export const scenario: ScenarioData = {
               content: 'That is wonderful! 😃',
             },
           ],
-          after: { targetState: 'byeFromDaniel' },
+          after: { delay:2000, targetState: 'byeFromDaniel' },
         },
         byeFromDaniel: {
           messages: [
@@ -161,7 +184,7 @@ export const scenario: ScenarioData = {
               content: 'Great. I’ll be closing out this ticket. Thank you and have a nice day!',
             },
           ],
-          after: { targetState: 'csat' },
+          after: { delay: 2000, targetState: 'csat' },
         },
         csat: {
           messages: [
@@ -225,9 +248,14 @@ export const scenario: ScenarioData = {
           messages: [
             {
               sender: botUserIds.casey,
-              content: 'I am still quite some distances away',
+              content: 'I am still quite some distance away',
               createdAt:'-30m',
             },
+          ],
+          after: { delay: 3000,  targetState: 'driverReplies1_1' },
+        },
+        driverReplies1_1: {
+          messages: [
             {
               sender: botUserIds.casey,
               customType: messageCustomTypes.map,
@@ -235,7 +263,7 @@ export const scenario: ScenarioData = {
               createdAt:'-30m',
             },
           ],
-          after: { targetState: 'alexReplies1' },
+          after: { delay: 4000,  targetState: 'alexReplies1' },
         },
         alexReplies1: {
           messages: [
@@ -245,7 +273,7 @@ export const scenario: ScenarioData = {
               createdAt:'-29m',
             },
           ],
-          after: { delay: 2000, targetState: 'driverReplies2' },
+          after: { delay: 3000, targetState: 'driverReplies2' },
         },
         driverReplies2: {
           messages: [
@@ -253,11 +281,15 @@ export const scenario: ScenarioData = {
               sender: botUserIds.casey,
               content: 'yeah, sorry traffic was terrible. I am approaching your street now',
             },
+          ], after: { delay: 3000, targetState: 'driverReplies2_2' }, 
+        },
+        driverReplies2_2: {
+          messages: [
             {
               sender: botUserIds.casey,
               content: 'I am at your building now, waiting at the reception front desk',
             },
-          ], after: { delay: 1000, targetState: 'driverReplies3' }, 
+          ], after: { delay: 3000, targetState: 'driverReplies3' }, 
         },
         driverReplies3: {
           messages: [
@@ -270,7 +302,7 @@ export const scenario: ScenarioData = {
                 
             },
 
-          ],  after: { targetState: 'alexReplies2' }, 
+          ],  after: { delay: 3000,  targetState: 'alexReplies2' }, 
         },
         alexReplies2: {
           messages: [
@@ -280,7 +312,7 @@ export const scenario: ScenarioData = {
               reactions: [{ emoji: '+1', userIds: [botUserIds.casey] }],
             },
           ],
-          after: { delay: 1000, targetState: 'driverReplies4' },
+          after: { delay: 3000, targetState: 'driverReplies4' },
         },
         driverReplies4: {
           messages: [
@@ -292,7 +324,7 @@ export const scenario: ScenarioData = {
               sender: botUserIds.casey,
               content: 'Sorry about the delay',
             },
-          ], after: { delay: 1000,  targetState: 'alexReplies3' }, 
+          ], after: { delay: 3000,  targetState: 'alexReplies3' }, 
         },
         alexReplies3: {
           messages: [

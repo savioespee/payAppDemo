@@ -37,7 +37,7 @@ export default function OrderConfirmation({
 
   const addressSection = address && (
     <View style={[styles.colStack]}>
-      <Text style={[styles.textXSmall, { color: '#757575' }]}>Ship to</Text>
+      <Text style={[styles.textXSmall, { color: '#757575' }]}>Deliver to</Text>
       <Text style={[styles.textSmall]}>{address}</Text>
     </View>
   );

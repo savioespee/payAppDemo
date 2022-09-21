@@ -29,7 +29,6 @@ import useTranslatedMessage from '../../hooks/useTranslatedMessage';
 import alert from '../../utils/alert';
 import { getChannelCounterpart } from '../../utils/common';
 import { isFAQBotAnswer, isMessageVisible } from '../../utils/desk';
-import formatDuration from '../../utils/formatDuration';
 import { intlDateTimeFormat } from '../../utils/intl';
 import safeJSONParse from '../../utils/safeJSONParse';
 import { getScenarioDataFromCustomChannelType, handleChannelStateEvent } from '../../utils/scenarioUtils';
@@ -133,7 +132,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
   const { channelUrl } = route.params as { channelUrl: string };
   const [input, setInput] = useState('');
 
-  const { toggleCallScreen, addCallEventListener, removeCallEventListener } = useContext(CallContext);
+  const { startCall, addCallEventListener, removeCallEventListener } = useContext(CallContext);
   const [isSendingFileMessage, setIsSendingFileMessage] = useState(false);
   const [channelMetaData, setChannelMetaData] = useState<Record<string, string>>({});
 
@@ -215,20 +214,6 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
     [channel, deleteMessage, upsertMessage],
   );
 
-  useEffect(() => {
-    addCallEventListener('chat', {
-      onCallEnded: (duration) => {
-        sendUserMessage(formatDuration(duration), {
-          customType: messageCustomTypes.callEnded,
-        });
-      },
-    });
-
-    return () => {
-      removeCallEventListener('chat');
-    };
-  }, [addCallEventListener, removeCallEventListener, sendUserMessage]);
-
   const otherUser = channel && getChannelCounterpart(channel);
 
   const showCallScreen = useCallback(() => {
@@ -236,48 +221,47 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
       return;
     }
 
-    toggleCallScreen({ user: otherUser });
-    sendUserMessage('Call started', {
-      customType: messageCustomTypes.callStarted,
-    });
-  }, [otherUser, sendUserMessage, toggleCallScreen]);
+    startCall({ user: otherUser });
+  }, [otherUser, startCall]);
 
   useImperativeHandle(ref, () => ({ showCallScreen }));
 
-  const [listQuery, setListQuery] = useState<SendBird.PreviousMessageListQuery | null>(null);
+  const refreshMessages = useCallback(async () => {
+    try {
+      if (!channel) {
+        return;
+      }
+
+      const listQuery = createListQuery(channel);
+      const { messages, hasMore } = await fetchNextMessages(listQuery);
+      setFetchMessageState({
+        messages,
+        hasMore,
+        status: 'success',
+        error: null,
+      });
+      channel.markAsRead();
+    } catch (error) {
+      console.error(error);
+      setFetchMessageState({
+        messages: [],
+        hasMore: false,
+        status: 'error',
+        error: error,
+      });
+    }
+  }, [channel]);
 
   useEffect(() => {
-    if (!listQuery || !channel) {
-      return;
-    }
+    refreshMessages();
+  }, [refreshMessages]);
 
-    async function refresh() {
-      try {
-        if (!listQuery || !channel) {
-          return;
-        }
-
-        const { messages, hasMore } = await fetchNextMessages(listQuery);
-        setFetchMessageState({
-          messages,
-          hasMore,
-          status: 'success',
-          error: null,
-        });
-        channel.markAsRead();
-      } catch (error) {
-        console.error(error);
-        setFetchMessageState({
-          messages: [],
-          hasMore: false,
-          status: 'error',
-          error: error,
-        });
-      }
-    }
-
-    refresh();
-  }, [listQuery, channel]);
+  useEffect(() => {
+    addCallEventListener('chat', { onCallEnded: refreshMessages });
+    return () => {
+      removeCallEventListener('chat');
+    };
+  }, [addCallEventListener, refreshMessages, removeCallEventListener]);
 
   const channelScenario = useMemo(
     () => (channel?.customType ? getScenarioDataFromCustomChannelType(channel?.customType) : undefined),
@@ -297,8 +281,6 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
         setChannel(channel);
         const metadata = (await channel.getAllMetaData()) as Record<string, string>;
         setChannelMetaData(metadata);
-
-        setListQuery(createListQuery(channel));
       } catch (error) {
         alert(String(error));
         navigation.navigate('Inbox' as any);

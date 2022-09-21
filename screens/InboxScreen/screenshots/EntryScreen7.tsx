@@ -22,20 +22,16 @@ export default function EntryScreen7() {
     getChannelUrlByCustomType('fooddelivery').then((channelUrl) => setdeliveryDriverChannelUrl(channelUrl));
   }, []);
 
-  const { toggleCallScreen } = useContext(CallContext);
+  const { startCall } = useContext(CallContext);
   const [calleeUser, setCalleeUser] = useState<SendBird.User | null>(null);
 
   useEffect(() => {
-    // getCallee('botUserIds.casey').then((callee) => setCalleeUser(callee));
-    async function getCallee() {
-      const userListQuery = sendbird.createApplicationUserListQuery();
-      userListQuery.userIdsFilter = [botUserIds.casey];
-      userListQuery.limit = 1;
-      const [user] = await userListQuery.next();
-      setCalleeUser(user);
+    async function loadCallee() {
+      const casey = await getCallee(botUserIds.casey);
+      setCalleeUser(casey);
     }
 
-    getCallee();
+    loadCallee();
   }, []);
 
   return (
@@ -51,7 +47,7 @@ export default function EntryScreen7() {
             style={{ position: 'absolute', width: '20%', height: '20%', top: '68%', right: '4%' }}
             onPress={() => {
               if (calleeUser) {
-                toggleCallScreen({ user: calleeUser });
+                startCall({ user: calleeUser });
               }
             }}
             

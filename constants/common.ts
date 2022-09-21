@@ -20,10 +20,12 @@ export const channelCustomTypes = {
   liveEvents: 'liveEvents',
   coach: 'coach',
   carouselDemo: 'carouselDemo',
-  seller:'seller',
-  fooddelivery:'fooddelivery',
+  seller: 'seller',
+  fooddelivery: 'fooddelivery',
   audioTest: 'audioTest',
 } as const;
+
+export const translationTargetLanguages = ['es', 'ko', 'en', 'zh'];
 
 export const messageCustomTypes = {
   notification: 'notification',

@@ -1,0 +1,200 @@
+diff --git a/api/utils.ts b/api/utils.ts
+index a6ec046..1180250 100644
+--- a/api/utils.ts
++++ b/api/utils.ts
+@@ -1,4 +1,4 @@
+-import { messageCustomTypes } from '../constants';
++import { messageCustomTypes, translationTargetLanguages } from '../constants';
+ import delay from '../utils/delay';
+ import { editMessage, markAsRead, sendMessage } from './platformAPI';
+ 
+@@ -6,7 +6,7 @@ export async function sendMessageAndTranslate(...params: Parameters<typeof sendM
+   const [channelUrl, options] = params;
+   const message = await sendMessage(channelUrl, {
+     ...options,
+-    translations: ['es', 'ko', 'en','zh'],
++    translations: translationTargetLanguages,
+   });
+   return message;
+ }
+diff --git a/components/ChatUI/index.tsx b/components/ChatUI/index.tsx
+index cddbeb4..a18f22a 100644
+--- a/components/ChatUI/index.tsx
++++ b/components/ChatUI/index.tsx
+@@ -133,7 +133,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+   const { channelUrl } = route.params as { channelUrl: string };
+   const [input, setInput] = useState('');
+ 
+-  const { toggleCallScreen, addCallEventListener, removeCallEventListener } = useContext(CallContext);
++  const { startCall } = useContext(CallContext);
+   const [isSendingFileMessage, setIsSendingFileMessage] = useState(false);
+   const [channelMetaData, setChannelMetaData] = useState<Record<string, string>>({});
+ 
+@@ -215,20 +215,6 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+     [channel, deleteMessage, upsertMessage],
+   );
+ 
+-  useEffect(() => {
+-    addCallEventListener('chat', {
+-      onCallEnded: (duration) => {
+-        sendUserMessage(formatDuration(duration), {
+-          customType: messageCustomTypes.callEnded,
+-        });
+-      },
+-    });
+-
+-    return () => {
+-      removeCallEventListener('chat');
+-    };
+-  }, [addCallEventListener, removeCallEventListener, sendUserMessage]);
+-
+   const otherUser = channel && getChannelCounterpart(channel);
+ 
+   const showCallScreen = useCallback(() => {
+@@ -236,11 +222,8 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+       return;
+     }
+ 
+-    toggleCallScreen({ user: otherUser });
+-    sendUserMessage('Call started', {
+-      customType: messageCustomTypes.callStarted,
+-    });
+-  }, [otherUser, sendUserMessage, toggleCallScreen]);
++    startCall({ user: otherUser });
++  }, [otherUser, startCall]);
+ 
+   useImperativeHandle(ref, () => ({ showCallScreen }));
+ 
+diff --git a/constants/common.ts b/constants/common.ts
+index dd614ec..f1e7827 100644
+--- a/constants/common.ts
++++ b/constants/common.ts
+@@ -20,11 +20,13 @@ export const channelCustomTypes = {
+   liveEvents: 'liveEvents',
+   coach: 'coach',
+   carouselDemo: 'carouselDemo',
+-  seller:'seller',
+-  fooddelivery:'fooddelivery',
++  seller: 'seller',
++  fooddelivery: 'fooddelivery',
+   audioTest: 'audioTest',
+ } as const;
+ 
++export const translationTargetLanguages = ['es', 'ko', 'en', 'zh'];
++
+ export const messageCustomTypes = {
+   notification: 'notification',
+   banner: 'banner',
+diff --git a/hooks/useCallScreen.js b/hooks/useCallScreen.js
+index 26a18d3..ad329eb 100644
+--- a/hooks/useCallScreen.js
++++ b/hooks/useCallScreen.js
+@@ -1,5 +1,16 @@
+ import { useCallback, useMemo, useState } from 'react';
+ 
++import { messageCustomTypes, translationTargetLanguages } from '../constants';
++import formatDuration from '../utils/formatDuration';
++import { sendbird } from '../utils/sendbird';
++
++async function get1On1ChannelWith(user) {
++  const channelParams = new sendbird.GroupChannelParams();
++  channelParams.addUserId(user.userId);
++  const { channel: groupChannel } = await sendbird.GroupChannel.createDistinctChannelIfNotExist(channelParams);
++  return groupChannel;
++}
++
+ export default function useCallScreen() {
+   const [callScreenData, setCallScreenData] = useState(null);
+ 
+@@ -20,24 +31,64 @@ export default function useCallScreen() {
+     [callEventListenerMap],
+   );
+ 
++  const startCall = useCallback(async ({ user }) => {
++    const groupChannel = await get1On1ChannelWith(user);
++
++    const messageParams = new sendbird.UserMessageParams();
++    messageParams.message = 'Call started';
++    messageParams.customType = messageCustomTypes.callStarted;
++    messageParams.translationTargetLanguages = translationTargetLanguages;
++    groupChannel.sendUserMessage(messageParams, (message, error) => {
++      if (error) {
++        console.error(error);
++      }
++      if (message) {
++        console.log(`Message "${message.message}" sent to channel ${groupChannel.url}`);
++      }
++      setCallScreenData({ user });
++    });
++  }, []);
++
+   const callContext = useMemo(
+     () => ({
+-      toggleCallScreen: setCallScreenData,
++      startCall,
+       isCallVisible,
+       addCallEventListener,
+       removeCallEventListener,
+     }),
+-    [addCallEventListener, isCallVisible, removeCallEventListener],
++    [addCallEventListener, isCallVisible, removeCallEventListener, startCall],
+   );
+ 
+   const stopCall = useCallback(
+-    (duration) => {
++    async (duration) => {
+       callEventListenerMap.forEach((listener) => {
+         listener.onCallEnded?.(duration);
+       });
+-      setCallScreenData(null);
++
++      if (!callScreenData) {
++        setCallScreenData(null);
++        return;
++      }
++
++      const { user } = callScreenData;
++
++      const groupChannel = await get1On1ChannelWith(user);
++
++      const messageParams = new sendbird.UserMessageParams();
++      messageParams.message = formatDuration(duration);
++      messageParams.customType = messageCustomTypes.callEnded;
++      messageParams.translationTargetLanguages = translationTargetLanguages;
++      groupChannel.sendUserMessage(messageParams, (message, error) => {
++        if (error) {
++          console.error(error);
++        }
++        if (message) {
++          console.log(`Message "${message.message}" sent to channel ${groupChannel.url}`);
++        }
++        setCallScreenData(null);
++      });
+     },
+-    [callEventListenerMap],
++    [callEventListenerMap, callScreenData],
+   );
+ 
+   return { callScreenData, callContext, stopCall };
+diff --git a/screens/InboxScreen/screenshots/EntryScreen7.tsx b/screens/InboxScreen/screenshots/EntryScreen7.tsx
+index 661a8d2..35cd67b 100644
+--- a/screens/InboxScreen/screenshots/EntryScreen7.tsx
++++ b/screens/InboxScreen/screenshots/EntryScreen7.tsx
+@@ -22,7 +22,7 @@ export default function EntryScreen7() {
+     getChannelUrlByCustomType('fooddelivery').then((channelUrl) => setdeliveryDriverChannelUrl(channelUrl));
+   }, []);
+ 
+-  const { toggleCallScreen } = useContext(CallContext);
++  const { startCall } = useContext(CallContext);
+   const [calleeUser, setCalleeUser] = useState<SendBird.User | null>(null);
+ 
+   useEffect(() => {
+@@ -51,7 +51,7 @@ export default function EntryScreen7() {
+             style={{ position: 'absolute', width: '20%', height: '20%', top: '68%', right: '4%' }}
+             onPress={() => {
+               if (calleeUser) {
+-                toggleCallScreen({ user: calleeUser });
++                startCall({ user: calleeUser });
+               }
+             }}
+             

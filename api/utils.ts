@@ -1,4 +1,4 @@
-import { messageCustomTypes } from '../constants';
+import { messageCustomTypes, translationTargetLanguages } from '../constants';
 import delay from '../utils/delay';
 import { editMessage, markAsRead, sendMessage } from './platformAPI';
 
@@ -6,7 +6,7 @@ export async function sendMessageAndTranslate(...params: Parameters<typeof sendM
   const [channelUrl, options] = params;
   const message = await sendMessage(channelUrl, {
     ...options,
-    translations: ['es', 'ko', 'en','zh'],
+    translations: translationTargetLanguages,
   });
   return message;
 }

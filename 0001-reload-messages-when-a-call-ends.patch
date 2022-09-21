@@ -1,0 +1,165 @@
+From 81877596b9c15c9ac78101cdb3f6e1b56e75757b Mon Sep 17 00:00:00 2001
+From: Alan Choi <alan.choi@sendbird.com>
+Date: Mon, 19 Sep 2022 23:45:08 -0700
+Subject: [PATCH] reload messages when a call ends
+
+---
+ components/ChatUI/index.tsx | 67 ++++++++++++++++++-------------------
+ hooks/useCallScreen.js      | 30 ++++++++++-------
+ 2 files changed, 51 insertions(+), 46 deletions(-)
+
+diff --git a/components/ChatUI/index.tsx b/components/ChatUI/index.tsx
+index a18f22a..31bf9a6 100644
+--- a/components/ChatUI/index.tsx
++++ b/components/ChatUI/index.tsx
+@@ -29,7 +29,6 @@ import useTranslatedMessage from '../../hooks/useTranslatedMessage';
+ import alert from '../../utils/alert';
+ import { getChannelCounterpart } from '../../utils/common';
+ import { isFAQBotAnswer, isMessageVisible } from '../../utils/desk';
+-import formatDuration from '../../utils/formatDuration';
+ import { intlDateTimeFormat } from '../../utils/intl';
+ import safeJSONParse from '../../utils/safeJSONParse';
+ import { getScenarioDataFromCustomChannelType, handleChannelStateEvent } from '../../utils/scenarioUtils';
+@@ -133,7 +132,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+   const { channelUrl } = route.params as { channelUrl: string };
+   const [input, setInput] = useState('');
+ 
+-  const { startCall } = useContext(CallContext);
++  const { startCall, addCallEventListener, removeCallEventListener } = useContext(CallContext);
+   const [isSendingFileMessage, setIsSendingFileMessage] = useState(false);
+   const [channelMetaData, setChannelMetaData] = useState<Record<string, string>>({});
+ 
+@@ -227,40 +226,42 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+ 
+   useImperativeHandle(ref, () => ({ showCallScreen }));
+ 
+-  const [listQuery, setListQuery] = useState<SendBird.PreviousMessageListQuery | null>(null);
++  const refreshMessages = useCallback(async () => {
++    try {
++      if (!channel) {
++        return;
++      }
+ 
+-  useEffect(() => {
+-    if (!listQuery || !channel) {
+-      return;
++      const listQuery = createListQuery(channel);
++      const { messages, hasMore } = await fetchNextMessages(listQuery);
++      setFetchMessageState({
++        messages,
++        hasMore,
++        status: 'success',
++        error: null,
++      });
++      channel.markAsRead();
++    } catch (error) {
++      console.error(error);
++      setFetchMessageState({
++        messages: [],
++        hasMore: false,
++        status: 'error',
++        error: error,
++      });
+     }
++  }, [channel]);
+ 
+-    async function refresh() {
+-      try {
+-        if (!listQuery || !channel) {
+-          return;
+-        }
+-
+-        const { messages, hasMore } = await fetchNextMessages(listQuery);
+-        setFetchMessageState({
+-          messages,
+-          hasMore,
+-          status: 'success',
+-          error: null,
+-        });
+-        channel.markAsRead();
+-      } catch (error) {
+-        console.error(error);
+-        setFetchMessageState({
+-          messages: [],
+-          hasMore: false,
+-          status: 'error',
+-          error: error,
+-        });
+-      }
+-    }
++  useEffect(() => {
++    refreshMessages();
++  }, [refreshMessages]);
+ 
+-    refresh();
+-  }, [listQuery, channel]);
++  useEffect(() => {
++    addCallEventListener('chat', { onCallEnded: refreshMessages });
++    return () => {
++      removeCallEventListener('chat');
++    };
++  }, [addCallEventListener, refreshMessages, removeCallEventListener]);
+ 
+   const channelScenario = useMemo(
+     () => (channel?.customType ? getScenarioDataFromCustomChannelType(channel?.customType) : undefined),
+@@ -280,8 +281,6 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+         setChannel(channel);
+         const metadata = (await channel.getAllMetaData()) as Record<string, string>;
+         setChannelMetaData(metadata);
+-
+-        setListQuery(createListQuery(channel));
+       } catch (error) {
+         alert(String(error));
+         navigation.navigate('Inbox' as any);
+diff --git a/hooks/useCallScreen.js b/hooks/useCallScreen.js
+index ad329eb..f05b168 100644
+--- a/hooks/useCallScreen.js
++++ b/hooks/useCallScreen.js
+@@ -61,10 +61,6 @@ export default function useCallScreen() {
+ 
+   const stopCall = useCallback(
+     async (duration) => {
+-      callEventListenerMap.forEach((listener) => {
+-        listener.onCallEnded?.(duration);
+-      });
+-
+       if (!callScreenData) {
+         setCallScreenData(null);
+         return;
+@@ -78,15 +74,25 @@ export default function useCallScreen() {
+       messageParams.message = formatDuration(duration);
+       messageParams.customType = messageCustomTypes.callEnded;
+       messageParams.translationTargetLanguages = translationTargetLanguages;
+-      groupChannel.sendUserMessage(messageParams, (message, error) => {
+-        if (error) {
+-          console.error(error);
+-        }
+-        if (message) {
+-          console.log(`Message "${message.message}" sent to channel ${groupChannel.url}`);
+-        }
++
++      try {
++        const message = await new Promise((resolve, reject) => {
++          groupChannel.sendUserMessage(messageParams, (message, error) => {
++            if (error) {
++              return reject(error);
++            }
++            resolve(message);
++          });
++        });
++        console.log(`Message "${message.message}" sent to channel ${groupChannel.url}`);
+         setCallScreenData(null);
+-      });
++
++        callEventListenerMap.forEach((listener) => {
++          listener.onCallEnded?.(duration);
++        });
++      } catch (error) {
++        console.error(error);
++      }
+     },
+     [callEventListenerMap, callScreenData],
+   );
+-- 
+2.37.0 (Apple Git-136)
+
