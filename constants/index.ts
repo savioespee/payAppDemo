@@ -53,7 +53,7 @@ export const CHANNEL_METADATA_KEYS = {
   state: 'state',
 } as const;
 
-export const USER_VERSION = '0.0.28';
+export const USER_VERSION = '0.0.30';
 
 export const nonCenteredAdminMessageCustomTypes = [
   messageCustomTypes.splitPayment,

@@ -1,11 +1,37 @@
+import { NavigationProp, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
+import { useCallback } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AssetBlockImage from '../../../components/AssetBlockImage';
 import Hotspot from '../../../components/Hotspot';
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+ 
+
+
 export default function EntryScreen6() {
+
+
+  const navigation = useNavigation<NavigationProp<any>>();
+ 
+  useFocusEffect(
+    useCallback(() => {
+      const timeoutId = setTimeout(() => {
+        // Schedule a navigation 5 seconds after this screen is focused.
+        navigation.navigate('Entry7');
+      }, 5000);
+      
+      return () => {
+        // If user leaves the screen, cancel the scheduled navigation.
+        clearTimeout(timeoutId);
+      };
+    }, [navigation])
+  );
+
   return (
     <View style={{ flex: 1 }}>
       <StatusBar style="dark" />

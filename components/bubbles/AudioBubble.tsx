@@ -1,4 +1,5 @@
-import { addMilliseconds, format } from 'date-fns';
+import { Console } from 'console';
+import { addMilliseconds, format, intervalToDuration } from 'date-fns';
 import { Audio } from 'expo-av';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -10,14 +11,27 @@ import Image from '../Image';
 import Text from '../Text';
 import Bubble from './Bubble';
 
-function formatDuration(ms) {
+const zeroPad = (v: number = 0) => String(v).padStart(2, '0');
+
+function formatDuration(ms: number) {
   try {
-    const helperDate = addMilliseconds(0, ms);
-    return format(helperDate, 'mm:ss');
+    const duration = intervalToDuration({ start: 0, end: ms });
+    return `${zeroPad(duration.minutes)}:${zeroPad(duration.seconds)}`;
   } catch {
     return '00:00';
   }
 }
+
+// function formatDuration(ms) {
+//   try {
+//     const helperDate = addMilliseconds(0, ms);
+//     return format(helperDate, 'mm:ss');
+    
+    
+//   } catch {
+//     return '00:00';
+//   }
+// }
 
 export default function AudioBubble({ style, message }) {
   const [sound, setSound] = useState<Audio.Sound>();

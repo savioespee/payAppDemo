@@ -6285,6 +6285,7 @@ __metadata:
     react-native-gesture-handler: ~2.5.0
     react-native-image-viewing: ^0.2.2
     react-native-iphone-x-helper: ^1.3.1
+    react-native-loading-spinner-overlay: ^3.0.1
     react-native-markdown-display: ^7.0.0-alpha.2
     react-native-masked-text: ^1.13.0
     react-native-modal: ^13.0.1
@@ -16588,6 +16589,16 @@ __metadata:
   peerDependencies:
     react-native: ">=0.42.0"
   checksum: 024376646009a966e33e12fc2358751830818b0fb73b1c601a64eb5e490d2dc43eec23668991b985a8c412a84d087f20eb45bb9b593567c08b66e741b7bddda5
+  languageName: node
+  linkType: hard
+
+"react-native-loading-spinner-overlay@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "react-native-loading-spinner-overlay@npm:3.0.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: d9e5e10bc6170084c162e717a94db7bd60a35eb8110614529caa501790ab9ddfb551239d2e9120aaa15048bfd0af03da8bed0d1ea09e7ebb88a4b39d88ed6878
   languageName: node
   linkType: hard
 

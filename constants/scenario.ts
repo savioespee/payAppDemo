@@ -234,7 +234,8 @@ export const scenario: ScenarioData = {
               customType: messageCustomTypes.audio,
               content: {
                 url: 'https://dxstmhyqfqr1o.cloudfront.net/inbox-demo/uploads/voicememo.m4a',
-                type: 'audio/m4a',
+                // url: 'https://drive.google.com/file/d/1qQEpCSgINn8k2D60jExAtz444kJXnlk4/preview',
+                type: 'audio/mp3',
               },
               createdAt: '-32m',
             },

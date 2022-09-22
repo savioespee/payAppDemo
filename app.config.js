@@ -1,11 +1,11 @@
 export default {
-  name: 'SendFood Demo',
-  description: 'Sales vertical demo, on-demand',
-  slug: 'SendFood-demo',
-  version: '1.0.2',
+  name: 'SendFood',
+  description: 'Sales vertical demo, SendFood',
+  slug: 'SendFood-demo-app',
+  version: '1.0.4',
   orientation: 'portrait',
   icon: './assets/appFoodLogo.png',
-  owner: 'sales-demo',
+  owner: 'sb-demo_app',
   userInterfaceStyle: 'light',
   extra: { apiHost: process.env.API_HOST },
   plugins: ['@config-plugins/android-jsc-intl'],
@@ -18,7 +18,7 @@ export default {
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: 'com.sendbird.salesdemo.sendfood',
+    bundleIdentifier: 'com.sendbird.salesdemoapp.sendfood',
   },
   android: {
     adaptiveIcon: {
