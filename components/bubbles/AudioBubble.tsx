@@ -1,4 +1,3 @@
-import { Console } from 'console';
 import { addMilliseconds, format, intervalToDuration } from 'date-fns';
 import { Audio } from 'expo-av';
 import { useEffect, useRef, useState } from 'react';

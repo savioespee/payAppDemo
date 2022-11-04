@@ -17,12 +17,17 @@ const textStyles = {
   },
   textSmall: {
     fontSize: 13,
+    lineHeight: 18,
   },
   textXSmall: {
     fontSize: 12,
   },
   textXXSmall: {
     fontSize: 11,
+  },
+  textXXXSmall: {
+    fontSize: 10,
+    lineHeight: 12,
   },
 } as const;
 

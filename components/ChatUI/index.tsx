@@ -194,7 +194,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
         version: 'mobile',
         ...(options?.data ? options.data : {}),
       });
-      params.translationTargetLanguages = ['es', 'ko', 'en'];
+      params.translationTargetLanguages = ['es', 'ko', 'en','zh', 'id'];
       params.message = message.trim();
 
       return new Promise<void>((resolve) => {
@@ -774,7 +774,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
             disabled={isSendingFileDisabled}
             isLoading={isSendingFileMessage}
             onPress={openImagePickerAsync}
-            style={{ marginEnd: 2, marginTop: 4 }}
+            style={{ marginEnd: 20, marginTop: 4 }}
           />
           <ChatInput
             inputType={lastMessageData?.userInputType === 'number' ? 'money' : 'text'}

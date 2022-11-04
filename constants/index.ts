@@ -31,7 +31,7 @@ export const languageNames = {
   ko: '한국어',
   es: 'Español',
   zh: 'Chinese',
-  // ta: 'Tamil',
+  id: 'Indonesian',
 };
 
 export const asyncStorageKeys = {
@@ -53,12 +53,13 @@ export const CHANNEL_METADATA_KEYS = {
   state: 'state',
 } as const;
 
-export const USER_VERSION = '0.0.30';
+export const USER_VERSION = '0.0.32';
 
 export const nonCenteredAdminMessageCustomTypes = [
   messageCustomTypes.splitPayment,
   messageCustomTypes.splitCost,
   messageCustomTypes.csat,
+  messageCustomTypes.csat5,
   messageCustomTypes.couldNotRecognize,
   messageCustomTypes.adminMessageBox,
   messageCustomTypes.adminMessageBubble,

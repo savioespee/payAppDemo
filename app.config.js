@@ -1,8 +1,9 @@
+
 export default {
   name: 'SendFood',
   description: 'Sales vertical demo, SendFood',
   slug: 'SendFood-demo-app',
-  version: '1.0.4',
+  version: '1.0.6',
   orientation: 'portrait',
   icon: './assets/appFoodLogo.png',
   owner: 'sb-demo_app',

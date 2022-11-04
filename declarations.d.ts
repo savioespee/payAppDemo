@@ -1,4 +1,4 @@
-import { ImageRequireSource } from 'react-native';
+// import { ImageRequireSource } from 'react-native';
 import SendBird from 'sendbird';
 
 import type Emoji from './api/platformAPI/emoji.json';
@@ -55,7 +55,7 @@ declare global {
     channelCustomType?: string;
   };
 
-  type MessageTranslations = { en: string; ko: string; es: string;  zh: string}; //zh: string;
+  type MessageTranslations = { en: string; ko: string; es: string;  zh: string; id:string}; 
 
   type CarouselItem = {
     type: 'image' | 'text';
@@ -67,6 +67,8 @@ declare global {
     backgroundColor?: string;
   };
 
+  type CSATType = '5-scale' | 'binary';
+  
   type MessageData = {
     /** Header to show with a warning icon inside a message bubble */
     header?: {
@@ -116,7 +118,7 @@ declare global {
     faqArticles?: string[];
 
     /** CSAT: -1(Bad), 0(Not scored), 1(Great) */
-    csat?: -1 | 0 | 1;
+    csat?: number;
 
     /** Order info - only displayed when custom type is "orderConfirmation" */
     orderInfo?: {

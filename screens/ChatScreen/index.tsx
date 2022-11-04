@@ -100,6 +100,7 @@ export default function ChatScreen() {
           />
           <Text style={[{ color: colors.secondaryText }, styles.textXSmall]}>Online</Text>
         </View>
+        
       );
     },
     [canCall],
@@ -224,7 +225,7 @@ export default function ChatScreen() {
     <>
       <ChatUI ref={chatUIRef} />
       <SelectionModal
-        options={[languageNames.en, languageNames.es, languageNames.ko, languageNames.zh]}
+        options={[languageNames.en, languageNames.es, languageNames.ko, languageNames.zh, languageNames.id]}
         selectedOption={languageNames[language] || languageNames.en}
         onSelect={(option) => {
           setIsLanguageModalVisible(false);

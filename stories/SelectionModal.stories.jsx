@@ -9,7 +9,7 @@ const Template = (args) => <Component {...args} />;
 
 export const SelectionModal = Template.bind({});
 SelectionModal.args = {
-  options: ['English', 'Español', '한국어', 'Chinese'],//
+  options: ['English', 'Español', '한국어', 'Chinese', 'Indonesian'],
   selectedOption: 'English',
   isVisible: true,
   title: 'Translate to',

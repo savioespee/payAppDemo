@@ -1,41 +1,36 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { ImageRequireSource, Pressable, StyleProp, View, ViewStyle } from 'react-native';
+import { ComponentType, Fragment, ReactNode, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { Platform, Pressable, StyleProp, useWindowDimensions, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+
+import SvgEmojiAverage from '../assets/emoji-average.svg';
+import SvgEmojiExcellent from '../assets/emoji-excellent.svg';
+import SvgEmojiGood from '../assets/emoji-good.svg';
+import SvgEmojiPoor from '../assets/emoji-poor.svg';
+import SvgEmojiWorst from '../assets/emoji-worst.svg';
 
 import useThemeValues from '../hooks/useThemeValues';
 import styles from '../styles';
 import useBubbleMaxWidth from './bubbles/useBubbleMaxWidth';
+import Image from './Image';
+import RowStack from './RowStack';
 import Spacer from './Spacer';
 import Text from './Text';
 
-type OptionType = 'great' | 'bad';
-
-const imageMap: Record<OptionType, { enabled: ImageRequireSource; disabled: ImageRequireSource }> = {
-  great: {
-    enabled: require('../assets/emoji-great-enabled.png'),
-    disabled: require('../assets/emoji-great-disabled.png'),
-  },
-  bad: {
-    enabled: require('../assets/emoji-bad-enabled.png'),
-    disabled: require('../assets/emoji-bad-disabled.png'),
-  },
-};
 
 function Option({
   label,
-  type,
+  // type,
+  image,
   status = 'init',
   onPress,
 }: {
   label: string;
-  type: OptionType;
+  // type: OptionType;
+  image: ReactNode;
   status?: 'selected' | 'unselected' | 'init';
   onPress?: () => void;
 }) {
   const theme = useThemeValues();
-  const imageSource = useMemo(() => {
-    return imageMap[type][status === 'unselected' ? 'disabled' : 'enabled'];
-  }, [status, type]);
 
   const statusRef = useRef(status);
 
@@ -45,8 +40,6 @@ function Option({
 
   const backgroundColor = useSharedValue('#FFFFFF00');
   const scale = useSharedValue(1);
-  const emojiTranslateX = useSharedValue(0);
-  const emojiTranslateY = useSharedValue(0);
 
   useLayoutEffect(() => {
     if (status === 'selected') {
@@ -54,9 +47,10 @@ function Option({
     } else {
       backgroundColor.value = '#FFFFFF00';
     }
-  }, [backgroundColor, status, theme.csatSelectedItemBackground]);
+  }, [backgroundColor, status, theme]);
 
   const animatedStyle = useAnimatedStyle(() => ({
+    opacity: status === 'unselected' ? 0.3 : 1,
     backgroundColor: backgroundColor.value,
     transform: [
       {
@@ -67,10 +61,6 @@ function Option({
         }),
       },
     ],
-  }));
-
-  const emojiAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: emojiTranslateY.value }, { translateX: emojiTranslateX.value }],
   }));
 
   return (
@@ -90,17 +80,6 @@ function Option({
       onHoverIn={() => {
         if (statusRef.current === 'init') {
           backgroundColor.value = 'white';
-          if (type === 'great') {
-            emojiTranslateY.value = withSpring(0, {
-              velocity: -100,
-              stiffness: 50,
-            });
-          } else {
-            emojiTranslateX.value = withSpring(0, {
-              velocity: -100,
-              stiffness: 200,
-            });
-          }
         }
       }}
       onHoverOut={() => {
@@ -112,51 +91,110 @@ function Option({
       <Animated.View
         style={[
           {
+            width: 56,
+            height: 64,
+            justifyContent: 'center',
             alignItems: 'center',
             borderRadius: 8,
-            minHeight: 64,
-            minWidth: 64,
-            paddingHorizontal: 12,
-            paddingVertical: 4,
             position: 'relative',
-            justifyContent: 'flex-end',
           },
           animatedStyle,
         ]}
       >
-        <Animated.Image
-          source={imageSource}
-          style={[{ width: 40, height: 40, top: 4, position: 'absolute' }, emojiAnimatedStyle]}
-        />
-        <Text style={[styles.textXSmall, { textAlign: 'center' }]}>{label}</Text>
+         {image}
+        <Text
+          style={{
+            ...styles.textXXXSmall,
+            textAlign: 'center',
+            marginTop: 6,
+          }}
+        >
+          {label}
+        </Text>
       </Animated.View>
     </Pressable>
   );
+}
+
+function getImageElement(resolvedModule: unknown) {
+  if (Platform.OS === 'web') {
+    return <Image source={{ uri: resolvedModule as string }} style={{ width: 32, height: 32 }} />;
+  }
+  const Component = resolvedModule as ComponentType;
+  return <Component />;
 }
 
 export default function CSAT({
   score = 0,
   question,
   style,
+  type,
   onSelect,
 }: {
   score?: number;
   question: string;
   onSelect?: (score: number) => void;
+  type: CSATType;
   style?: StyleProp<ViewStyle>;
 }) {
   const handleSelect = async (score: number) => {
     await onSelect?.(score);
   };
 
-  const maxWidth = useBubbleMaxWidth();
+
+  const bubbleMaxWidth = useBubbleMaxWidth();
+
+  const options = useMemo(() => {
+    if (type === 'binary') {
+      return [
+        {
+          label: 'Great',
+          score: 1,
+          image: getImageElement(SvgEmojiGood),
+        },
+        {
+          label: 'Bad',
+          score: -1,
+          image: getImageElement(SvgEmojiPoor),
+        },
+      ];
+    }
+    return [
+      {
+        label: 'Worst',
+        score: 1,
+        image: getImageElement(SvgEmojiWorst),
+      },
+      {
+        label: 'Poor',
+        score: 2,
+        image: getImageElement(SvgEmojiPoor),
+      },
+      {
+        label: 'Average',
+        score: 3,
+        image: getImageElement(SvgEmojiAverage),
+      },
+      {
+        label: 'Good',
+        score: 4,
+        image: getImageElement(SvgEmojiGood),
+      },
+      {
+        label: 'Excellent',
+        score: 5,
+        image: getImageElement(SvgEmojiExcellent),
+      },
+    ];
+  }, [type]);
+
+  const { width: screenWidth } = useWindowDimensions();
 
   return (
     <View
       style={[
         {
-          minWidth: 275,
-          maxWidth,
+          maxWidth: type === '5-scale' ? screenWidth - 68 : bubbleMaxWidth,
           backgroundColor: '#F2F3F5',
           padding: 16,
           borderRadius: 16,
@@ -165,22 +203,30 @@ export default function CSAT({
         style,
       ]}
     >
-      <Text style={[styles.textSmedium, styles.textBold, { textAlign: 'center', marginBottom: 16 }]}>{question}</Text>
-      <View style={styles.rowStack}>
+         <Text
+        style={{
+          ...styles.textSmedium,
+          lineHeight: styles.textSmall.lineHeight,
+          textAlign: 'center',
+          marginBottom: 16,
+          fontWeight: 'bold',
+        }}
+      >
+        {question}
+      </Text>
+      <RowStack>
+        {options.map(({ label, image, score: optionScore }, index) => (
+          <Fragment key={label}>
+            {index > 0 && <Spacer size={4} />}
         <Option
-          label="Great"
-          type="great"
-          status={score === 0 ? 'init' : score > 0 ? 'selected' : 'unselected'}
-          onPress={() => handleSelect(1)}
+          label={label}
+          image={image}
+          status={score === 0 ? 'init' : score === optionScore ? 'selected' : 'unselected'}
+          onPress={() => handleSelect(optionScore)}
         />
-        <Spacer size={24} />
-        <Option
-          label="Bad"
-          type="bad"
-          status={score === 0 ? 'init' : score > 0 ? 'unselected' : 'selected'}
-          onPress={() => handleSelect(-1)}
-        />
-      </View>
+      </Fragment>
+    ))}
+  </RowStack>
     </View>
   );
 }

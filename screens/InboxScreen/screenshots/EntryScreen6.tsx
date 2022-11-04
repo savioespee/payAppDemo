@@ -12,7 +12,6 @@ function delay(ms: number) {
 }
  
 
-
 export default function EntryScreen6() {
 
 

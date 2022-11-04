@@ -190,7 +190,7 @@ export const scenario: ScenarioData = {
           messages: [
             {
               sender: botUserIds.supportBot,
-              customType: messageCustomTypes.csat,
+              customType: messageCustomTypes.csat5,
               content: 'How was your chat experience?',
               data: { csat: 0 },
             },

@@ -109,10 +109,15 @@ function ChatMessage({
         />
       );
     }
-
-    if (parsedData && message.customType === messageCustomTypes.csat && message.isUserMessage()) {
+    
+    if (
+      parsedData &&
+      ([messageCustomTypes.csat, messageCustomTypes.csat5] as string[]).includes(message.customType || '') &&
+      message.isUserMessage()
+    ) {
       return (
         <CSAT
+        type={message.customType === messageCustomTypes.csat5 ? '5-scale' : 'binary'}
           score={parsedData.csat}
           question={getTranslatedMessage(message)}
           onSelect={async (score) => {

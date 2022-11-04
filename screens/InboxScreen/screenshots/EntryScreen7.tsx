@@ -40,7 +40,7 @@ export default function EntryScreen7() {
       <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: 'white'}}>
         <View style={{ position: 'relative' }}>
           <AssetBlockImage source={require('../../../assets/YourOrder.png')} />
-          <Hotspot style={{ position: 'absolute', width: '20%', height: '20%', top: '68%', left: '52%' }} onPress={() => {
+          <Hotspot style={{ position: 'absolute', width: '20%', height: '10%', top: '67%', left: '52%' }} onPress={() => {
             navigation.navigate('Chat', { channelUrl: deliveryDriverChannelUrl });
           }} />
           <Hotspot

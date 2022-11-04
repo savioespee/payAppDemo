@@ -2431,7 +2431,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/metro-config@npm:~0.3.18, @expo/metro-config@npm:~0.3.19":
+"@expo/metro-config@npm:~0.3.18":
   version: 0.3.22
   resolution: "@expo/metro-config@npm:0.3.22"
   dependencies:
@@ -2444,6 +2444,22 @@ __metadata:
     resolve-from: ^5.0.0
     sucrase: ^3.20.0
   checksum: f0084def2a88fde7aba6044e1680af5e4dfd0f5d201cc2f6402f1febfc2e2f5c489f43fa98792993622e045c2a503a694115c7d469b91bc985126253962ca6ba
+  languageName: node
+  linkType: hard
+
+"@expo/metro-config@npm:~0.4.0":
+  version: 0.4.0
+  resolution: "@expo/metro-config@npm:0.4.0"
+  dependencies:
+    "@expo/config": 7.0.1
+    "@expo/json-file": 8.2.36
+    chalk: ^4.1.0
+    debug: ^4.3.2
+    find-yarn-workspace-root: ~2.0.0
+    getenv: ^1.0.0
+    resolve-from: ^5.0.0
+    sucrase: ^3.20.0
+  checksum: 8f571dd36c9eafed15ff709183eaa18bd5b92c1f9a5f367e245913c862d1fd6084812351d34260ed293c967a83bc230774d6e148f1947c495a0fd5b815e75aba
   languageName: node
   linkType: hard
 
@@ -6267,7 +6283,7 @@ __metadata:
     expo-image-picker: ~13.3.1
     expo-splash-screen: ~0.16.1
     expo-status-bar: ~1.4.0
-    expo-updates: ~0.14.5
+    expo-updates: ~0.14.6
     expo-web-browser: ~11.0.0
     indefinite: ^2.4.1
     intl: ^1.2.5
@@ -6278,7 +6294,7 @@ __metadata:
     prettier: ^2.6.2
     react: 18.0.0
     react-dom: 18.0.0
-    react-native: 0.69.5
+    react-native: 0.69.6
     react-native-autolink: ^4.0.0
     react-native-base64: ^0.2.1
     react-native-expo-image-cache: ^4.1.0
@@ -10184,14 +10200,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-updates@npm:~0.14.5":
-  version: 0.14.5
-  resolution: "expo-updates@npm:0.14.5"
+"expo-updates@npm:~0.14.6":
+  version: 0.14.6
+  resolution: "expo-updates@npm:0.14.6"
   dependencies:
     "@expo/code-signing-certificates": 0.0.2
     "@expo/config": ~7.0.1
     "@expo/config-plugins": ~5.0.1
-    "@expo/metro-config": ~0.3.19
+    "@expo/metro-config": ~0.4.0
     arg: 4.1.0
     expo-eas-client: ~0.3.0
     expo-manifests: ~0.3.0
@@ -10204,7 +10220,7 @@ __metadata:
     expo: "*"
   bin:
     expo-updates: bin/cli.js
-  checksum: af35117e980c5b62ff064a3ce2712749f33d2110c9e6a4ccc60bda06017015c989c794a6d8a5cfcf8885c08f840cad4d23e920f1f575a8eab7b383c0606700e4
+  checksum: ee6e7e30785e9d5b53236b8097e1380adc2efcfd465458ffbeaa5c4d81dc7dd02c327cb5d107cfb6a7db5a91a2e89f87ee755b556ac668151b7635fd43649e69
   languageName: node
   linkType: hard
 
@@ -16054,12 +16070,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"promise@npm:^8.0.3":
-  version: 8.1.0
-  resolution: "promise@npm:8.1.0"
+"promise@npm:^8.2.0":
+  version: 8.3.0
+  resolution: "promise@npm:8.3.0"
   dependencies:
     asap: ~2.0.6
-  checksum: 89b71a56154ed7d66a73236d8e8351a9c59adddba3929ecc845f75421ff37fc08ea0c67ad76cd5c0b0d81812c7d07a32bed27e7df5fcc960c6d68b0c1cd771f7
+  checksum: a69f0ddbddf78ffc529cffee7ad950d307347615970564b17988ce43fbe767af5c738a9439660b24a9a8cbea106c0dcbb6c2b20e23b7e96a8e89e5c2679e94d5
   languageName: node
   linkType: hard
 
@@ -16786,9 +16802,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native@npm:0.69.5":
-  version: 0.69.5
-  resolution: "react-native@npm:0.69.5"
+"react-native@npm:0.69.6":
+  version: 0.69.6
+  resolution: "react-native@npm:0.69.6"
   dependencies:
     "@jest/create-cache-key-function": ^27.0.1
     "@react-native-community/cli": ^8.0.4
@@ -16811,7 +16827,7 @@ __metadata:
     mkdirp: ^0.5.1
     nullthrows: ^1.1.1
     pretty-format: ^26.5.2
-    promise: ^8.0.3
+    promise: ^8.2.0
     react-devtools-core: 4.24.0
     react-native-codegen: ^0.69.2
     react-native-gradle-plugin: ^0.0.7
@@ -16827,7 +16843,7 @@ __metadata:
     react: 18.0.0
   bin:
     react-native: cli.js
-  checksum: 4f7cfcd0d614cc6fe897a49197bd036210625c5eb547342ac7ebea45ab5febae73d6a9a7438f08f454d1e02c2e041b3f910461c4a6e5c6e0e44f5cfe70405990
+  checksum: d050b9f0389362368cd1286c02dd46cd84def9fcbf4774dcedd5cbc3aa9ad594de48f22c5458ec257c07646d79722256bc837b25205c3a52752d5c5b6a7873f4
   languageName: node
   linkType: hard
 
