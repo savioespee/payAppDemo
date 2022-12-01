@@ -18,18 +18,18 @@ export default function PayEntryScreen2() {
   return (
     <View style={{ flex: 1 }}>
       <StatusBar style="dark" />
-      <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
+      {/*<ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white', position: 'relative' }} edges={['top']}>
           <AssetBlockImage source={require('../../../assets/LandingPayments.png')} />
         </SafeAreaView>
-      </ScrollView>
+      </ScrollView> */}
 
       <View style={{ flex: 1 }}>
         <ScrollView>
-          <AssetBlockImage source={require('../../../assets/PaymentActivity1.png')} />
-          <Hotspot style={{ position: 'absolute', width: '32%', height: '80%', left: '2%', top: '20%' }} toScreenName="PayEntryScreen3" />{/* Send modey */}
-          <Hotspot style={{ position: 'absolute', width: '30%', height: '100%', left: '35%', top: '20%' }} toScreenName="PayEntryScreen5" />{/* My Transactions */}
-          <Hotspot style={{ position: 'absolute', width: '30%', height: '100%', left: '66%', top: '20%' }} toScreenName="PayEntryScreen6" />{/* Insights */}
+          <AssetBlockImage source={require('../../../assets/PaymentActivity2.png')} />
+          <Hotspot style={{ position: 'absolute', width: '30%', height: '8%', left: '3%', top: '19.5%' }} toScreenName="PayEntryScreen3" />{/* Send modey */}
+          <Hotspot style={{ position: 'absolute', width: '30%', height: '8%', left: '35%', top: '19.5%' }} toScreenName="PayEntryScreen5" />{/* My Transactions */}
+          <Hotspot style={{ position: 'absolute', width: '30%', height: '8%', left: '67%', top: '19.5%' }} toScreenName="PayEntryScreen6" />{/* Insights */}
         </ScrollView>
       </View>
       <SafeAreaView style={{ backgroundColor: 'white', borderTopColor: '#EEE', borderTopWidth: 1 }} edges={['bottom']}>
