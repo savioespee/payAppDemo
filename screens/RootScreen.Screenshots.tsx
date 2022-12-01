@@ -21,9 +21,16 @@ import EntryScreen6 from './InboxScreen/screenshots/EntryScreen6';
 import EntryScreen7 from './InboxScreen/screenshots/EntryScreen7';
 import TestScreen1 from './InboxScreen/screenshots/TestScreen1';
 import NewEntryScreen1 from './InboxScreen/screenshots/NewEntryScreen1';
-
 import NewConversationScreen from './NewConversationScreen';
 import SettingsScreen from './SettingsScreen';
+
+import PayEntryScreen1 from './InboxScreen/screenshots/PayEntryScreen1';
+import PayEntryScreen2 from './InboxScreen/screenshots/PayEntryScreen2';
+import PayEntryScreen3 from './InboxScreen/screenshots/PayEntryScreen3';
+import PayEntryScreen4 from './InboxScreen/screenshots/PayEntryScreen4';
+import PayEntryScreen5 from './InboxScreen/screenshots/PayEntryScreen5';
+import PayEntryScreen6 from './InboxScreen/screenshots/PayEntryScreen6';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -36,7 +43,7 @@ export default function RootScreen() {
     title: '',
     isVisible: false,
     shareTargets: [],
-    onSelect: () => {},
+    onSelect: () => { },
   });
 
   const shareModalContext = useMemo(() => {
@@ -66,6 +73,13 @@ export default function RootScreen() {
             {isSignedIn && (
               <>
                 <Stack.Group screenOptions={{ headerShown: false, animation: 'slide_from_left' }}>
+                  <Stack.Screen name="PayEntryScreen1" component={PayEntryScreen1} />
+                  <Stack.Screen name="PayEntryScreen2" component={PayEntryScreen2} />
+                  <Stack.Screen name="PayEntryScreen3" component={PayEntryScreen3} />
+                  <Stack.Screen name="PayEntryScreen4" component={PayEntryScreen4} />
+                  <Stack.Screen name="PayEntryScreen5" component={PayEntryScreen5} />
+                  <Stack.Screen name="PayEntryScreen6" component={PayEntryScreen6} />
+
                   <Stack.Screen name="Entry1" component={EntryScreen1} />
                   <Stack.Screen name="Entry2" component={EntryScreen2} />
                   <Stack.Screen name="Entry3" component={EntryScreen3} />
@@ -74,7 +88,7 @@ export default function RootScreen() {
                   <Stack.Screen name="Entry6" component={EntryScreen6} />
                   <Stack.Screen name="Entry7" component={EntryScreen7} />
                   <Stack.Screen name="NewEntryScreen1" component={NewEntryScreen1} />
-                  <Stack.Screen name="TS1" component={TestScreen1}/>
+                  <Stack.Screen name="TS1" component={TestScreen1} />
                 </Stack.Group>
                 <Stack.Screen name="Inbox" component={InboxScreen} />
                 <Stack.Screen

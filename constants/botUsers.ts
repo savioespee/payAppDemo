@@ -42,6 +42,20 @@ const camilla: BotUserInfo = {
   avatarPath: 'assets/avatars/camilla.png',
 };
 
+const hailey: BotUserInfo = {
+  userId: '_ww_hailey',
+  nickname: 'Hailey',
+  userType: 'friend',
+  avatarPath: 'assets/avatars/camilla.png',
+};
+
+const sameer: BotUserInfo = {
+  userId: '_ww_sameer',
+  nickname: 'Sameer',
+  userType: 'friend',
+  avatarPath: 'assets/avatars/sameer.png',
+};
+
 const supportBot: BotUserInfo = {
   userId: '_ww_support_bot',
   nickname: 'Support Bot',
@@ -105,6 +119,8 @@ const _botUsers = {
   coachCarter,
   promotions,
   camilla,
+  hailey,
+  sameer,
   supportBot,
   daniel,
   breethe,

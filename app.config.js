@@ -1,12 +1,11 @@
-
 export default {
-  name: 'SendFood',
-  description: 'Sales vertical demo, SendFood',
-  slug: 'SendFood-demo-app',
-  version: '1.0.6',
+  name: 'SendPay',
+  description: 'Sales vertical demo, Fintech',
+  slug: 'SendPay-demo-app',
+  version: '1.0.0',
   orientation: 'portrait',
-  icon: './assets/appFoodLogo.png',
-  owner: 'sb-demo_app',
+  icon: './assets/appPayLogo.png',
+  owner: 'se-sandbox ',
   userInterfaceStyle: 'light',
   extra: { apiHost: process.env.API_HOST },
   plugins: ['@config-plugins/android-jsc-intl'],
@@ -19,15 +18,15 @@ export default {
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: 'com.sendbird.salesdemoapp.sendfood',
+    bundleIdentifier: 'com.sendbird.salesdemoapp.sendpay',
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: './assets/appFoodLogo.png',
+      foregroundImage: './assets/appPayLogo.png',
       backgroundColor: '#FFFFFF',
     },
   },
   web: {
-    favicon: './assets/appFoodLogo.png',
+    favicon: './assets/appPayLogo.png',
   },
 };

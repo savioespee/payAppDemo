@@ -63,7 +63,7 @@ index fa1b0c5..e4b98e9 100644
              {
 -            sender: botUserIds.supportBot,
 +              sender: botUserIds.supportBot,
-             content: 'Please confirm that you have read and agreed with SendFood’s Data Privacy Policy here https://www.sendfood.com/privacy',
+             content: 'Please confirm that you have read and agreed with SendPay’s Data Privacy Policy here https://www.sendpay.com/privacy',
              },
              {
 -            sender: botUserIds.supportBot,

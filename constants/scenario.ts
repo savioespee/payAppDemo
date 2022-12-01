@@ -4,6 +4,7 @@ import logError from '../utils/logError';
 import { botUserIds } from './botUsers';
 import { channelCustomTypes, messageCustomTypes } from './common';
 import { sendMessageAndTranslate } from '../api/utils';
+import { getTime } from 'date-fns';
 
 
 export const scenario: ScenarioData = {
@@ -23,7 +24,7 @@ export const scenario: ScenarioData = {
           messages: [
             {
               sender: botUserIds.supportBot,
-              content: 'Hello Alex, I am SendBot. Welcome to SendFood’s Customer Support. How can I help you today?',
+              content: 'Hello Alex, I am SendBot. Welcome to SendPay’s Customer Support. How can I help you today?',
               createdAt: '-1m',
             },
           ],
@@ -35,7 +36,7 @@ export const scenario: ScenarioData = {
           messages: [
             {
               sender: botUserIds.supportBot,
-            content: 'Please confirm that you have read and agreed with SendFood’s Data Privacy Policy here https://www.sendfood.com/privacy',
+              content: 'Please confirm that you have read and agreed with SendPay’s Data Privacy Policy here https://www.sendpay.com/privacy',
             },
             {
               sender: botUserIds.supportBot,
@@ -51,18 +52,8 @@ export const scenario: ScenarioData = {
           messages: [
             {
               sender: botUserIds.supportBot,
-              customType: messageCustomTypes.orderConfirmation,
-              content: 'Hi Alex, is this the order that you would like enquire about?',
-              data: {
-                orderInfo: {
-                  price: '$30.10',
-                  product: 'Marinara',
-                  paymentMethod: 'AMEX ****0001',
-                  address: '400 1st Ave, San Mateo',
-                  localImageName: 'orderConfirmation.png',
-                  title: 'Order Id: #0000-1111',
-                },
-              },
+              content: 'Hi Alex, is this regarding the money transfer you made earlier for amount of $46.09 and reference no - #D79004321786?',
+
             },
           ],
           after: { targetState: 'AlexReplies2' },
@@ -71,23 +62,23 @@ export const scenario: ScenarioData = {
           suggestedReplies: [['Yes', 'AlexReplies2_1'], 'No'],
         },
         AlexReplies2_1: {
-          messages:[
-          ],after: { delay: 1000, targetState: 'agentConfirmed' },
+          messages: [
+          ], after: { delay: 1000, targetState: 'agentConfirmed' },
         },
         agentConfirmed: {
-          messages:[
-            
-              {
-                sender: botUserIds.supportBot,
-                content: 'Thank you for the confirmation',
-              },
-          ],after: { delay: 3000, targetState: 'AlexReplies3' },
+          messages: [
+
+            {
+              sender: botUserIds.supportBot,
+              content: 'Thank you for the confirmation',
+            },
+          ], after: { delay: 3000, targetState: 'AlexReplies3' },
         },
         AlexReplies3: {
           messages: [
             {
               sender: 'ME',
-              content: 'The delivery was terribly late today!',
+              content: 'My friend could not see the amount in his account.',
             },
           ],
           after: { delay: 2000, targetState: 'botReplies2' },
@@ -110,17 +101,17 @@ export const scenario: ScenarioData = {
             {
               sender: botUserIds.daniel,
               content:
-                'Hey Alex, I see you’re having issue with your delivery.',
+                'Hey Alex, I see you’re having issue with your payment.',
             },
           ],
-          after: { delay : 2000 ,targetState: 'agentConnected1' },
+          after: { delay: 2000, targetState: 'agentConnected1' },
         },
         agentConnected1: {
           messages: [
             {
               sender: botUserIds.daniel,
               content:
-                ' We’d like to cover the cost of this order to make up for the inconvenience.',
+                ' I would like to let you know that sometimes the transfer may take upto 24 hours. But for inconvinience caused, we would like to offer you a gift voucker.',
             },
           ],
           after: { delay: 3000, targetState: 'AlexReplies' },
@@ -134,7 +125,7 @@ export const scenario: ScenarioData = {
               sender: 'ME',
               content: 'Hi Daniel, thanks for helping out.',
             },
-          ],after: { delay: 1000, targetState: 'agentSendVoucher' },
+          ], after: { delay: 1000, targetState: 'agentSendVoucher' },
         },
         agentSendVoucher: {
           messages: [
@@ -146,18 +137,18 @@ export const scenario: ScenarioData = {
             },
           ],
 
-          async onActionPress(data, {transitionState}) {
+          async onActionPress(data, { transitionState }) {
             const { channelUrl } = data.message;
             try {
               await inviteUser(channelUrl, botUserIds.supportBot);
               await sendMessageAndTranslate(
                 channelUrl, {
-                  message_type: 'MESG',
-                  user_id: botUserIds.supportBot,
-                  message:  '🎉 Congratulation!!! 🎉\nYou have successfully claimed your $30 SendFood voucher.',
-                },
+                message_type: 'MESG',
+                user_id: botUserIds.supportBot,
+                message: '🎉 Congratulations!!! 🎉\nYou have successfully claimed your $30 SendPay voucher.',
+              },
               ),
-              transitionState('alexSaysThanksbefore');
+                transitionState('alexSaysThanksbefore');
             } catch (error) {
               logError(error);
             }
@@ -175,7 +166,7 @@ export const scenario: ScenarioData = {
               content: 'That is wonderful! 😃',
             },
           ],
-          after: { delay:2000, targetState: 'byeFromDaniel' },
+          after: { delay: 2000, targetState: 'byeFromDaniel' },
         },
         byeFromDaniel: {
           messages: [
@@ -190,7 +181,7 @@ export const scenario: ScenarioData = {
           messages: [
             {
               sender: botUserIds.supportBot,
-              customType: messageCustomTypes.csat5,
+              customType: messageCustomTypes.csat,
               content: 'How was your chat experience?',
               data: { csat: 0 },
             },
@@ -218,120 +209,119 @@ export const scenario: ScenarioData = {
     },
     {
       // New channel
-      name: 'SendFood',
-      customType: channelCustomTypes.fooddelivery,
-      members: [botUserIds.casey],
+      name: 'Hailey',
+      customType: channelCustomTypes.paydemo,
+      members: [botUserIds.hailey],
       states: {
         initial: {
           messages: [
             {
               sender: 'ME',
-              content: 'Hey, any update on arrival time?',
-              createdAt:'-35m'
+              content: 'Hey Hailey, how are you?',
+              createdAt: '-35m'
             },
-            {
-              sender: botUserIds.casey,
-              customType: messageCustomTypes.audio,
-              content: {
-                url: 'https://dxstmhyqfqr1o.cloudfront.net/inbox-demo/uploads/voicememo.m4a',
-                // url: 'https://drive.google.com/file/d/1qQEpCSgINn8k2D60jExAtz444kJXnlk4/preview',
-                type: 'audio/mp3',
-              },
-              createdAt: '-32m',
-            },
-           
           ],
           onChannelEnter(context) {
-            context.transitionState('driverReplies1');
+            context.transitionState('haileyReplies1');
           },
         }, //individual state
-        driverReplies1: {
+        haileyReplies1: {
           messages: [
             {
-              sender: botUserIds.casey,
-              content: 'I am still quite some distance away',
-              createdAt:'-30m',
+              sender: botUserIds.hailey,
+              content: 'Hi, I am good, thank you. Hope you are doing good too.',
+              createdAt: '-30m',
             },
           ],
-          after: { delay: 3000,  targetState: 'driverReplies1_1' },
-        },
-        driverReplies1_1: {
-          messages: [
-            {
-              sender: botUserIds.casey,
-              customType: messageCustomTypes.map,
-              content: 'ETA 30 mins',
-              createdAt:'-30m',
-            },
-          ],
-          after: { delay: 4000,  targetState: 'alexReplies1' },
+          after: { delay: 3000, targetState: 'alexReplies1' },
         },
         alexReplies1: {
           messages: [
             {
               sender: 'ME',
-              content: 'So far away??? what the fuck!!!',
-              createdAt:'-29m',
+              content: 'Just checking, have you got the money I sent you some time back?',
+              createdAt: '-29m',
             },
           ],
-          after: { delay: 3000, targetState: 'driverReplies2' },
+          after: { delay: 3000, targetState: 'haileyReplies2' },
         },
-        driverReplies2: {
+        haileyReplies2: {
           messages: [
             {
-              sender: botUserIds.casey,
-              content: 'yeah, sorry traffic was terrible. I am approaching your street now',
+              sender: botUserIds.hailey,
+              content: 'yeah, I got it. Thanks Sweety.',
             },
-          ], after: { delay: 3000, targetState: 'driverReplies2_2' }, 
+          ], after: { delay: 3000, targetState: 'haileyReplies2_2' },
         },
-        driverReplies2_2: {
-          messages: [
-            {
-              sender: botUserIds.casey,
-              content: 'I am at your building now, waiting at the reception front desk',
-            },
-          ], after: { delay: 3000, targetState: 'driverReplies3' }, 
-        },
-        driverReplies3: {
-          messages: [
-            {
-              sender: botUserIds.casey,
-              content: {
-                url: 'https://lh3.googleusercontent.com/R_JwvfGK0uDZsG3P3eq-zElMv_lpTV-AGAzk8na2NZ-stisI22dwg66ifcCYD51CzM4=w2400',
-                type: 'image/jpg',
-              },
-                
-            },
-
-          ],  after: { delay: 3000,  targetState: 'alexReplies2' }, 
-        },
-        alexReplies2: {
-          messages: [
-            {
-              sender: "ME",
-              content: 'Ok, I will come to pick it up',
-              reactions: [{ emoji: '+1', userIds: [botUserIds.casey] }],
-            },
-          ],
-          after: { delay: 3000, targetState: 'driverReplies4' },
-        },
-        driverReplies4: {
-          messages: [
-            {
-              sender: botUserIds.casey,
-              content: 'Thank you',
-            },
-            {
-              sender: botUserIds.casey,
-              content: 'Sorry about the delay',
-            },
-          ], after: { delay: 3000,  targetState: 'alexReplies3' }, 
-        },
-        alexReplies3: {
+        haileyReplies2_2: {
           messages: [
             {
               sender: 'ME',
-              content: '😡',
+              content: 'Cool!! Lets catch up some time this weekend. Take care.',
+
+            },
+          ], after: { delay: 3000, targetState: 'haileyReplies3' },
+        },
+        haileyReplies3: {
+          messages: [
+            {
+              sender: botUserIds.hailey,
+              content: 'Sure, bbye!',
+            },
+          ],
+        },
+      }, //state
+    }, //channel
+    {
+      // New channel
+      name: 'Pine St Group',
+      customType: channelCustomTypes.friends,
+      members: [botUserIds.hailey, botUserIds.amanda, botUserIds.casey],
+      states: {
+        initial: {
+          messages: [
+            {
+              sender: botUserIds.amanda,
+              content: 'Hey guys! Lets split the bill.',
+              createdAt: '-5m'
+            },
+          ],
+          onChannelEnter(context) {
+            context.transitionState('splitBills');
+          },
+        }, //individual state
+        splitBills: {
+          messages: [
+            {
+              sender: botUserIds.hailey,
+              //customType: messageCustomTypes.splitPayment,
+              content: '$200 to be split with all of us.',
+              data: { cover: '', actions: [{ label: 'Split Now', variant: 'light' }] }
+            },
+          ],
+
+          async onActionPress(data, { transitionState }) {
+            const { channelUrl } = data.message;
+            try {
+              await inviteUser(channelUrl, botUserIds.supportBot);
+              await sendMessageAndTranslate(
+                channelUrl, {
+                message_type: 'MESG',
+                user_id: botUserIds.hailey,
+                message: 'Split $200 in 4 friends with a share of $50 each.',
+              },
+              ),
+                transitionState('alexSaysThanks');
+            } catch (error) {
+              logError(error);
+            }
+          },
+        },
+        alexSaysThanks: {
+          messages: [
+            {
+              sender: 'ME',
+              content: 'Thanks! 😃',
             },
           ],
         },

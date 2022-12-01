@@ -1,5 +1,5 @@
-export const APP_ID = '26627951-8A43-4076-9ACE-B851BA61CDD4';
-export const API_TOKEN = '5b0f623d3ba9ddeb5d823de0e977a7f6914f4ba2';
+export const APP_ID = 'CBC39C77-D7A9-4740-A56C-D8B9528A4288';
+export const API_TOKEN = 'e87f2e9529e9dcd9017e6f40abeaf27bde1092d0';
 
 export const channelCustomTypes = {
   fakeClosedTicket: 'fakeClosedTicket',
@@ -22,10 +22,11 @@ export const channelCustomTypes = {
   carouselDemo: 'carouselDemo',
   seller: 'seller',
   fooddelivery: 'fooddelivery',
+  paydemo: 'paydemo',
   audioTest: 'audioTest',
 } as const;
 
-export const translationTargetLanguages = ['es', 'ko', 'en', 'zh', 'id'];
+export const translationTargetLanguages = ['es', 'ko', 'en', 'zh', 'id', 'hi', 'te', 'ta'];
 
 export const messageCustomTypes = {
   notification: 'notification',

@@ -49,13 +49,13 @@ export default function SettingsScreen() {
             <Text style={[styles.textMedium, { color: colors.secondaryText }]}>Edit Profile</Text>
           </View>
         </View>
-        <View style ={{ flex: 2}}>
+        <View style={{ flex: 2 }}>
           <ScrollView>
-          <AssetBlockImage source={require('../assets/Profile.png')} />
-          <Hotspot style={{ position: 'absolute', width: '100%', height: '10%', top: '45%'}} onPress={() => {
-            navigation.navigate('Chat', { channelUrl: SupportChannelUrl });
-          }} />
-          </ScrollView>        
+            <AssetBlockImage source={require('../assets/Profile.png')} />
+            <Hotspot style={{ position: 'absolute', width: '100%', height: '10%', top: '45%' }} onPress={() => {
+              navigation.navigate('Chat', { channelUrl: SupportChannelUrl });
+            }} />
+          </ScrollView>
         </View>
 
         {/* <Spacer size={16} />
@@ -64,8 +64,8 @@ export default function SettingsScreen() {
       </ScrollView>
       <SafeAreaView style={{ backgroundColor: 'white', borderTopColor: '#EEE', borderTopWidth: 1 }} edges={['bottom']}>
         <AssetBlockImage source={require('../assets/BottomNavSetting.png')} />
-        <Hotspot style={{ position: 'absolute', width: '25%', height: '100%', left: 0 }} toScreenName="Entry1" />
-        <Hotspot style={{ position: 'absolute', width: '25%', height: '100%', left: '25%' }} toScreenName="Entry7"  />
+        <Hotspot style={{ position: 'absolute', width: '25%', height: '100%', left: 0 }} toScreenName="PayEntryScreen2" />
+        <Hotspot style={{ position: 'absolute', width: '25%', height: '100%', left: '25%' }} toScreenName="Entry7" />
         <Hotspot style={{ position: 'absolute', width: '25%', height: '100%', left: '75%' }} onPress={initializeCurrentUser} />
       </SafeAreaView>
     </View>
