@@ -310,14 +310,30 @@ export const scenario: ScenarioData = {
           messages: [
             {
               sender: botUserIds.amanda,
-              content: 'Hey guys! Lets split the bill.',
+              content: 'Hey guys! John is completing five years this month and we are planning for a gift for him. Willing to split the cost of $200 with me? If so click the button to split.',
               createdAt: '-5m'
             },
           ],
           onChannelEnter(context) {
-            context.transitionState('splitBills');
+            context.transitionState('alexSaysOk');
           },
         }, //individual state
+        alexSaysOk: {
+          messages: [
+            {
+              sender: 'ME',
+              content: 'Agree! 😃',
+            },
+          ], after: { delay: 3000, targetState: 'danielSaysOk' },
+        },
+        danielSaysOk: {
+          messages: [
+            {
+              sender: botUserIds.daniel,
+              content: 'Me too! 👍',
+            },
+          ], after: { delay: 3000, targetState: 'splitBills' },
+        },
         splitBills: {
           messages: [
             {
