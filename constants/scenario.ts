@@ -52,8 +52,9 @@ export const scenario: ScenarioData = {
           messages: [
             {
               sender: botUserIds.supportBot,
-              content: 'Hi Alex, is this regarding the money transfer you made earlier for amount of $46.09 and reference no - #D79004321786?',
-
+              content: 'Is this regarding the money transfer you made earlier as per this image?',
+              data: { cover: 'PaymentReceiptShare.png', actions: [{ label: '', variant: 'translucent-light' }] },
+              //data: { localImageName: 'PaymentReceiptShare.png' },
             },
           ],
           after: { targetState: 'AlexReplies2' },
@@ -233,7 +234,7 @@ export const scenario: ScenarioData = {
               createdAt: '-30m',
             },
           ],
-          after: { delay: 3000, targetState: 'alexReplies1' },
+          after: { delay: 3000, targetState: 'paymentConfirmation' },
         },
         alexReplies1: {
           messages: [
@@ -243,7 +244,34 @@ export const scenario: ScenarioData = {
               createdAt: '-29m',
             },
           ],
-          after: { delay: 3000, targetState: 'haileyReplies2' },
+          after: { delay: 3000, targetState: 'paymentConfirmation' },
+        },
+        paymentConfirmation: {
+          messages: [
+            {
+              sender: 'ME',
+              content: 'Just checking, have you got the money I sent you some time back? Here are the transaction details.',
+              data: { cover: 'PaymentReceiptShare.png', actions: [{ label: '', variant: 'translucent-light' }] },
+              //data: { localImageName: 'PaymentReceiptShare.png' },
+            },
+          ],
+          after: { delay: 6000, targetState: 'haileyReplies2' },
+          /*   async onActionPress(data, { transitionState }) {
+               const { channelUrl } = data.message;
+               try {
+                 await inviteUser(channelUrl, 'ME');
+                 await sendMessageAndTranslate(
+                   channelUrl, {
+                   message_type: 'MESG',
+                   user_id: 'ME',
+                   message: 'Great, thanks for confirmation.',
+                 },
+                 ),
+                   transitionState('haileyReplies2');
+               } catch (error) {
+                 logError(error);
+               }
+             },*/
         },
         haileyReplies2: {
           messages: [

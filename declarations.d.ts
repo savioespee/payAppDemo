@@ -55,7 +55,7 @@ declare global {
     channelCustomType?: string;
   };
 
-  type MessageTranslations = { en: string; ko: string; es: string;  zh: string; id:string}; 
+  type MessageTranslations = { en: string; ko: string; es: string; zh: string; id: string };
 
   type CarouselItem = {
     type: 'image' | 'text';
@@ -68,25 +68,25 @@ declare global {
   };
 
   type CSATType = '5-scale' | 'binary';
-  
+
   type MessageData = {
     /** Header to show with a warning icon inside a message bubble */
     header?: {
       title: string;
       type:
-        | 'bookmark'
-        | 'warning'
-        | 'announcement'
-        | 'card'
-        | 'people'
-        | 'tip'
-        | 'tag'
-        | 'news'
-        | 'stock'
-        | 'bank'
-        | 'reminder'
-        | 'promotions'
-        | 'ww';
+      | 'bookmark'
+      | 'warning'
+      | 'announcement'
+      | 'card'
+      | 'people'
+      | 'tip'
+      | 'tag'
+      | 'news'
+      | 'stock'
+      | 'bank'
+      | 'reminder'
+      | 'promotions'
+      | 'ww';
     };
 
     /** Actions to show inside a message bubble */

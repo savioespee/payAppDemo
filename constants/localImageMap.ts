@@ -23,6 +23,7 @@ export const localImageMap = {
   'img-mindset-mindfullness.png': require('../assets/img-mindset-mindfullness.png'),
   'img-mindset-pandemic.png': require('../assets/img-mindset-pandemic.png'),
   'voucher.png': require('../assets/voucher.png'),
+  'PaymentReceiptShare.png': require('../assets/PaymentReceiptShare.png'),
   'door.png': require('../assets/door.png'),
   'orderConfirmation.png': require('../assets/OrderConfirmation.png'),
   'priority-boarding.jpg': require('../assets/airlines/priority-boarding.jpg'),
