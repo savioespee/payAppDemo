@@ -145,7 +145,7 @@ export const scenario: ScenarioData = {
               await sendMessageAndTranslate(
                 channelUrl, {
                 message_type: 'MESG',
-                user_id: botUserIds.supportBot,
+                user_id: botUserIds.daniel,
                 message: '🎉 Congratulations!!! 🎉\nYou have successfully claimed your $30 SendPay voucher.',
               },
               ),
