@@ -63,7 +63,7 @@ export default function SettingsScreen() {
         <Spacer size={32} /> */}
       </ScrollView>
       <SafeAreaView style={{ backgroundColor: 'white', borderTopColor: '#EEE', borderTopWidth: 1 }} edges={['bottom']}>
-        <AssetBlockImage source={require('../assets/BottomNavSetting.png')} />
+        <AssetBlockImage source={require('../assets/BottomNavSetting1.png')} />
         <Hotspot style={{ position: 'absolute', width: '25%', height: '100%', left: 0 }} toScreenName="PayEntryScreen2" />
         <Hotspot style={{ position: 'absolute', width: '25%', height: '100%', left: '25%' }} toScreenName="Entry7" />
         <Hotspot style={{ position: 'absolute', width: '25%', height: '100%', left: '75%' }} onPress={initializeCurrentUser} />
