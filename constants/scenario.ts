@@ -79,7 +79,7 @@ export const scenario: ScenarioData = {
           messages: [
             {
               sender: 'ME',
-              content: 'My friend could not see the amount in his account.',
+              content: 'My friend could not see the amount in her account.',
             },
           ],
           after: { delay: 2000, targetState: 'botReplies2' },
@@ -102,7 +102,7 @@ export const scenario: ScenarioData = {
             {
               sender: botUserIds.daniel,
               content:
-                'Hey Alex, I see you’re having issue with your payment.',
+                'Hey Alex, I see you are having issue with your payment.',
             },
           ],
           after: { delay: 2000, targetState: 'agentConnected1' },
@@ -112,7 +112,7 @@ export const scenario: ScenarioData = {
             {
               sender: botUserIds.daniel,
               content:
-                ' I would like to let you know that sometimes the transfer may take upto 24 hours. But for inconvinience caused, we would like to offer you a gift voucker.',
+                ' I would like to let you know that sometimes the transfer may take upto 24 hours. But for the inconvenience caused, we would like to offer you a gift voucher.',
             },
           ],
           after: { delay: 3000, targetState: 'AlexReplies' },

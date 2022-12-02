@@ -46,7 +46,7 @@ const hailey: BotUserInfo = {
   userId: '_ww_hailey',
   nickname: 'Hailey',
   userType: 'friend',
-  avatarPath: 'assets/avatars/camilla.png',
+  avatarPath: 'assets/avatars/hailey.png',
 };
 
 const sameer: BotUserInfo = {

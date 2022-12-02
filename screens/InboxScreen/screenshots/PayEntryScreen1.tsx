@@ -11,12 +11,12 @@ export default function PayEntryScreen1() {
       <StatusBar style="dark" />
       <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white', position: 'relative' }} edges={['top']}>
-          <AssetBlockImage source={require('../../../assets/SENDPAYLANDING_new.png')} />
+          <AssetBlockImage source={require('../../../assets/SendPayLanding.png')} />
         </SafeAreaView>
       </ScrollView>
       <SafeAreaView style={{ backgroundColor: 'white', position: 'relative' }} edges={['bottom']}>
-        <AssetBlockImage source={require('../../../assets/BottomNav2.png')} />
-        <Hotspot style={{ position: 'absolute', width: '100%', height: '40%' }} toScreenName="PayEntryScreen2" />{/* Get Started */}
+        <AssetBlockImage source={require('../../../assets/BottomNav2_2.png')} />
+        <Hotspot style={{ position: 'absolute', width: '55%', height: '40%', left: '19%', top: "11%" }} toScreenName="PayEntryScreen2" />{/* Get Started */}
         <Hotspot style={{ position: 'absolute', width: '25%', height: '45%', left: '0%', top: "55%" }} toScreenName="PayEntryScreen1" />{/* Orders */}
         <Hotspot style={{ position: 'absolute', width: '25%', height: '45%', left: '75%', top: "55%" }} toScreenName="Settings" />{/* Profile/Settings */}
       </SafeAreaView>

@@ -41,18 +41,18 @@ export default function PayEntryScreen5() {
       <StatusBar style="dark" />
       <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: 'white' }}>
         <View style={{ position: 'relative' }}>
-          <AssetBlockImage source={require('../../../assets/PaymentTransactions.png')} />
-          <Hotspot style={{ position: 'absolute', width: '15%', height: '7%', left: '65%', right: '30%', top: '75%' }} onPress={() => {
+          <AssetBlockImage source={require('../../../assets/PaymentTransactions1.png')} />
+          <Hotspot style={{ position: 'absolute', width: '14%', height: '7%', left: '82%', right: '10%', top: '75%' }} onPress={() => {
             navigation.navigate('Chat', { channelUrl: SupportChannelUrl });
           }} />
-          <Hotspot
+          {/*} <Hotspot
             style={{ position: 'absolute', width: '15%', height: '7%', left: '82%', right: '10%', top: '75%' }}
             onPress={() => {
               if (calleeUser) {
                 startCall({ user: calleeUser });
               }
-            }}
-          />
+            }} 
+          />*/}
         </View>
       </SafeAreaView>
       <SafeAreaView style={{ backgroundColor: 'white', borderTopColor: '#EEE', borderTopWidth: 1 }} edges={['bottom']}>
