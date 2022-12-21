@@ -1,0 +1,641 @@
+From a13fd441c01a9161fd71fe3b93ff1e27dcb11822 Mon Sep 17 00:00:00 2001
+From: Alan Choi <alan.choi@sendbird.com>
+Date: Wed, 14 Dec 2022 19:15:47 -0800
+Subject: [PATCH] use typing indicator API
+
+---
+ api/platformAPI/channels.ts                   |   8 +
+ api/utils.ts                                  |  25 +--
+ components/ChatMessage/BillSplitting.tsx      |   3 +-
+ .../ChatMessage/TypingIndicatorBubble.tsx     |  63 +++++++
+ components/ChatMessage/chatMessageStyles.ts   |  26 +++
+ components/ChatMessage/index.tsx              |  36 +---
+ components/ChatMessage/styles.js              |   7 -
+ components/ChatUI/index.tsx                   | 165 +++++++++++-------
+ utils/desk.js                                 |  36 ++--
+ 9 files changed, 238 insertions(+), 131 deletions(-)
+ create mode 100644 components/ChatMessage/TypingIndicatorBubble.tsx
+ create mode 100644 components/ChatMessage/chatMessageStyles.ts
+ delete mode 100644 components/ChatMessage/styles.js
+
+diff --git a/api/platformAPI/channels.ts b/api/platformAPI/channels.ts
+index 5d5f540..3b030a1 100644
+--- a/api/platformAPI/channels.ts
++++ b/api/platformAPI/channels.ts
+@@ -128,6 +128,14 @@ export async function deleteAllGroupChannels(userId: string) {
+   );
+ }
+ 
++export async function startTypingIndicator(channelUrl: string, userIds: string[]) {
++  await chatAxios.post(`/v3/group_channels/${channelUrl}/typing`, { user_ids: userIds });
++}
++
++export async function stopTypingIndicator(channelUrl: string, userIds: string[]) {
++  await chatAxios.delete(`/v3/group_channels/${channelUrl}/typing`, { data: { user_ids: userIds } });
++}
++
+ export async function create1On1Channel(
+   userId: string,
+   otherUserId: string,
+diff --git a/api/utils.ts b/api/utils.ts
+index 1180250..d0be871 100644
+--- a/api/utils.ts
++++ b/api/utils.ts
+@@ -1,6 +1,6 @@
+-import { messageCustomTypes, translationTargetLanguages } from '../constants';
++import { translationTargetLanguages } from '../constants';
+ import delay from '../utils/delay';
+-import { editMessage, markAsRead, sendMessage } from './platformAPI';
++import { markAsRead, sendMessage, startTypingIndicator, stopTypingIndicator } from './platformAPI';
+ 
+ export async function sendMessageAndTranslate(...params: Parameters<typeof sendMessage>) {
+   const [channelUrl, options] = params;
+@@ -26,20 +26,11 @@ export const typeAndSendMessage = async ({
+     await markAsRead(userId, channelUrl);
+   }
+ 
+-  if (messageParams.message_type === 'MESG') {
+-    const { message_id: messageId } = await sendMessageAndTranslate(channelUrl, {
+-      message_type: 'MESG',
+-      custom_type: messageCustomTypes.typingIndicator,
+-      user_id: userId,
+-      message: 'Typing...',
+-      created_at: messageParams.created_at,
+-    });
+-    await delay(typingDuration);
+-    return editMessage(channelUrl, messageId, {
+-      ...messageParams,
+-      custom_type: messageParams.custom_type || '',
+-    });
+-  } else {
+-    return sendMessageAndTranslate(channelUrl, messageParams);
++  if (messageParams.message_type === 'MESG' && userId) {
++    const startTime = Date.now();
++    await startTypingIndicator(channelUrl, [userId]);
++    await delay(typingDuration - (Date.now() - startTime));
++    await stopTypingIndicator(channelUrl, [userId]);
+   }
++  return sendMessageAndTranslate(channelUrl, messageParams);
+ };
+diff --git a/components/ChatMessage/BillSplitting.tsx b/components/ChatMessage/BillSplitting.tsx
+index 0c15b49..3bf13fd 100644
+--- a/components/ChatMessage/BillSplitting.tsx
++++ b/components/ChatMessage/BillSplitting.tsx
+@@ -1,12 +1,11 @@
+ import { LayoutAnimation, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+ 
+-import { colors } from '../../constants';
+ import styles from '../../styles';
+ import Bubble from '../bubbles/Bubble';
+ import useBubbleMaxWidth from '../bubbles/useBubbleMaxWidth';
+ import Image from '../Image';
+ import Text from '../Text';
+-import chatMessageStyles from './styles';
++import chatMessageStyles from './chatMessageStyles';
+ 
+ const BillSplitting = ({
+   sender,
+diff --git a/components/ChatMessage/TypingIndicatorBubble.tsx b/components/ChatMessage/TypingIndicatorBubble.tsx
+new file mode 100644
+index 0000000..1b1bca2
+--- /dev/null
++++ b/components/ChatMessage/TypingIndicatorBubble.tsx
+@@ -0,0 +1,63 @@
++import { rgba } from 'polished';
++import { memo } from 'react';
++import { View } from 'react-native';
++import SendBird from 'sendbird';
++
++import { colors } from '../../constants';
++import styles from '../../styles';
++import { intlDateLineFormat } from '../../utils/intl';
++import Avatar from '../Avatar';
++import Text from '../Text';
++import chatMessageStyles from './chatMessageStyles';
++import TypingIndicator from './TypingIndicator';
++
++const bubbleBackgroundColor = colors.incomingMessageBackground;
++
++function TypingIndicatorBubble({
++  typingMember,
++  isFirstMessageOfDay,
++  isFollowingSameSender,
++  isFollowedBySameSender,
++}: {
++  typingMember: SendBird.Member;
++  isFirstMessageOfDay: boolean;
++  isFollowingSameSender: boolean;
++  isFollowedBySameSender: boolean;
++}) {
++  const isAvatarHidden = isFollowingSameSender;
++  const isNicknameVisible = !isFollowedBySameSender;
++
++  function renderMessage() {
++    return (
++      <View style={chatMessageStyles.messageRow}>
++        <Avatar user={typingMember} size={28} style={[chatMessageStyles.avatar, { opacity: isAvatarHidden ? 0 : 1 }]} />
++        <View style={[chatMessageStyles.messageTextWrapper, { alignItems: 'flex-start' }]}>
++          {isNicknameVisible && (
++            <Text
++              style={[
++                {
++                  marginBottom: 2,
++                  fontWeight: '700',
++                  color: rgba('black', 0.5),
++                  paddingLeft: 12,
++                },
++                styles.textXSmall,
++              ]}
++            >
++              {typingMember.nickname}
++            </Text>
++          )}
++          <TypingIndicator style={{ backgroundColor: bubbleBackgroundColor }} />
++        </View>
++      </View>
++    );
++  }
++  return (
++    <View>
++      {isFirstMessageOfDay && <Text style={chatMessageStyles.dateLine}>{intlDateLineFormat.format(Date.now())}</Text>}
++      {renderMessage()}
++    </View>
++  );
++}
++
++export default memo(TypingIndicatorBubble);
+diff --git a/components/ChatMessage/chatMessageStyles.ts b/components/ChatMessage/chatMessageStyles.ts
+new file mode 100644
+index 0000000..0e53340
+--- /dev/null
++++ b/components/ChatMessage/chatMessageStyles.ts
+@@ -0,0 +1,26 @@
++import { StyleSheet } from 'react-native';
++
++const chatMessageStyles = StyleSheet.create({
++  divider: { width: '100%', height: 1, backgroundColor: '#DEDEDE' },
++  dateLine: {
++    textAlign: 'center',
++    color: 'rgba(0, 0, 0, 0.7)',
++    paddingVertical: 18,
++  },
++  avatar: {
++    marginHorizontal: 8,
++    marginBottom: 3,
++  },
++  messageRow: {
++    display: 'flex',
++    paddingHorizontal: 8,
++    alignItems: 'flex-end',
++    flexDirection: 'row',
++  },
++  messageTextWrapper: {
++    display: 'flex',
++    flexDirection: 'column',
++  },
++});
++
++export default chatMessageStyles;
+diff --git a/components/ChatMessage/index.tsx b/components/ChatMessage/index.tsx
+index 48626e2..38944e3 100644
+--- a/components/ChatMessage/index.tsx
++++ b/components/ChatMessage/index.tsx
+@@ -25,6 +25,7 @@ import Image from '../Image';
+ import OrderConfirmation from '../OrderConfirmation';
+ import Text from '../Text';
+ import BillSplitting from './BillSplitting';
++import chatMessageStyles from './chatMessageStyles';
+ import FilePreview from './FilePreview';
+ import isMyMessage from './isMyMessage';
+ import MessageFooter from './MessageFooter';
+@@ -109,7 +110,7 @@ function ChatMessage({
+         />
+       );
+     }
+-    
++
+     if (
+       parsedData &&
+       ([messageCustomTypes.csat, messageCustomTypes.csat5] as string[]).includes(message.customType || '') &&
+@@ -117,7 +118,7 @@ function ChatMessage({
+     ) {
+       return (
+         <CSAT
+-        type={message.customType === messageCustomTypes.csat5 ? '5-scale' : 'binary'}
++          type={message.customType === messageCustomTypes.csat5 ? '5-scale' : 'binary'}
+           score={parsedData.csat}
+           question={getTranslatedMessage(message)}
+           onSelect={async (score) => {
+@@ -239,12 +240,8 @@ function ChatMessage({
+     return (
+       <View
+         style={[
+-          _styles.messageRow,
+-          {
+-            flexDirection: _isMyMessage ? 'row-reverse' : 'row',
+-            paddingHorizontal: 8,
+-            alignItems: 'flex-end',
+-          },
++          chatMessageStyles.messageRow,
++          { flexDirection: _isMyMessage ? 'row-reverse' : 'row' },
+           _isMyMessage && { marginLeft: 8 },
+           (message.reactions?.length ?? 0) > 0 && { paddingBottom: 22 },
+         ]}
+@@ -253,12 +250,12 @@ function ChatMessage({
+           <Avatar
+             user={(message as SendBird.UserMessage).sender || undefined}
+             size={28}
+-            style={[_styles.avatar, { opacity: isAvatarHidden ? 0 : 1 }]}
++            style={[chatMessageStyles.avatar, { opacity: isAvatarHidden ? 0 : 1 }]}
+           />
+         )}
+         <View
+           style={[
+-            _styles.messageTextWrapper,
++            chatMessageStyles.messageTextWrapper,
+             {
+               alignItems: _isMyMessage ? 'flex-end' : 'flex-start',
+             },
+@@ -320,13 +317,7 @@ function ChatMessage({
+   return (
+     <View>
+       {isFirstMessageOfDay && (
+-        <Text
+-          style={{
+-            textAlign: 'center',
+-            color: rgba('black', 0.7),
+-            paddingVertical: 18,
+-          }}
+-        >
++        <Text style={chatMessageStyles.dateLine}>
+           {(isThisYear(message.createdAt) ? intlDateLineFormat : intlDateLineLastYearFormat).format(message.createdAt)}
+         </Text>
+       )}
+@@ -337,17 +328,6 @@ function ChatMessage({
+ }
+ 
+ const _styles = StyleSheet.create({
+-  avatar: {
+-    marginHorizontal: 8,
+-    marginBottom: 3,
+-  },
+-  messageRow: {
+-    display: 'flex',
+-  },
+-  messageTextWrapper: {
+-    display: 'flex',
+-    flexDirection: 'column',
+-  },
+   bubble: {
+     borderRadius: 18,
+     paddingHorizontal: 12,
+diff --git a/components/ChatMessage/styles.js b/components/ChatMessage/styles.js
+deleted file mode 100644
+index 77ca9c5..0000000
+--- a/components/ChatMessage/styles.js
++++ /dev/null
+@@ -1,7 +0,0 @@
+-import { StyleSheet } from 'react-native';
+-
+-const styles = StyleSheet.create({
+-  divider: { width: '100%', height: 1, backgroundColor: '#DEDEDE' },
+-});
+-
+-export default styles;
+diff --git a/components/ChatUI/index.tsx b/components/ChatUI/index.tsx
+index 6737b85..a5da6e1 100644
+--- a/components/ChatUI/index.tsx
++++ b/components/ChatUI/index.tsx
+@@ -2,6 +2,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
+ import { isSameDay } from 'date-fns';
+ import {
+   forwardRef,
++  Key,
+   useCallback,
+   useContext,
+   useEffect,
+@@ -13,6 +14,7 @@ import {
+ import { FlatList, Keyboard, LayoutAnimation, Platform, StyleSheet, TextInputProps, View } from 'react-native';
+ import ImageView from 'react-native-image-viewing';
+ import { SafeAreaView } from 'react-native-safe-area-context';
++import SendBird from 'sendbird';
+ 
+ import { setChannelState } from '../../api/ChannelStateUtils';
+ import handleUserSentMessage from '../../api/handleUserSentMessage';
+@@ -35,6 +37,7 @@ import { getScenarioDataFromCustomChannelType, handleChannelStateEvent } from '.
+ import { sendbird } from '../../utils/sendbird';
+ import BotResponseOptions from '../BotResponseOptions';
+ import ChatMessage from '../ChatMessage';
++import TypingIndicatorBubble from '../ChatMessage/TypingIndicatorBubble';
+ import CircleProgress from '../CircleProgress';
+ import KeyboardAvoidingView from '../KeyboardAvoidingView';
+ import KeypadModal from '../KeypadModal';
+@@ -50,6 +53,20 @@ import openImagePicker from './openImagePicker';
+ import SendButton from './SendButton';
+ import SendFileButton from './SendFileButton';
+ 
++type MessageListItem = {
++  key: Key;
++  message: Message | null;
++  typingMember: SendBird.Member | null;
++  createdAt: number;
++  userId: string | undefined;
++  isFirstMessageOfDay: boolean;
++  isFollowingSameSender: boolean;
++  isFollowedBySameSender: boolean;
++  isFollowedBySameTimestamp: boolean;
++  isFollowingSameTimestamp: boolean;
++  isTimestampVisible: boolean;
++};
++
+ const QUERY_LIMIT = 100;
+ 
+ function createListQuery(channel: SendBird.GroupChannel) {
+@@ -60,22 +77,36 @@ function createListQuery(channel: SendBird.GroupChannel) {
+   return listQuery;
+ }
+ 
+-function isSenderSame(message1?: Message, message2?: Message) {
++type MessageListItemSource = Message | SendBird.Member;
++
++function isAdminMessage(item: MessageListItemSource): item is SendBird.AdminMessage {
++  return 'userId' in item ? false : item.isAdminMessage();
++}
++
++function getSenderId(item: MessageListItemSource) {
++  return 'userId' in item ? item.userId : item.isAdminMessage() ? undefined : item.sender?.userId;
++}
++
++function getCreatedAt(item: MessageListItemSource) {
++  return 'userId' in item ? Date.now() : item.createdAt;
++}
++
++function isSenderSame(message1?: MessageListItemSource, message2?: MessageListItemSource) {
+   if (!message1 || !message2) {
+     return false;
+   }
+ 
+-  if (message1.isAdminMessage() !== message2.isAdminMessage()) {
++  if (isAdminMessage(message1) !== isAdminMessage(message2)) {
+     return false;
+   }
+ 
+-  if (message1.isAdminMessage()) {
+-    return message1.customType === message2.customType;
++  if (isAdminMessage(message1)) {
++    return message1.customType === (message2 as SendBird.AdminMessage).customType;
+   }
+ 
+-  const isUserIdEqual = message1.sender?.userId === (message2 as SendBird.UserMessage).sender?.userId;
++  const isUserIdEqual = getSenderId(message1) === getSenderId(message2);
+ 
+-  const isMessagesClose = Math.abs(message1.createdAt - message2.createdAt) < 1000 * 60 * 10;
++  const isMessagesClose = Math.abs(getCreatedAt(message1) - getCreatedAt(message2)) < 1000 * 60 * 10;
+ 
+   return isUserIdEqual && isMessagesClose;
+ }
+@@ -131,6 +162,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+   const navigation = useNavigation();
+   const { channelUrl } = route.params as { channelUrl: string };
+   const [input, setInput] = useState('');
++  const [typingMembers, setTypingMembers] = useState<SendBird.Member[]>([]);
+ 
+   const { startCall, addCallEventListener, removeCallEventListener } = useContext(CallContext);
+   const [isSendingFileMessage, setIsSendingFileMessage] = useState(false);
+@@ -194,7 +226,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+         version: 'mobile',
+         ...(options?.data ? options.data : {}),
+       });
+-      params.translationTargetLanguages = ['es', 'ko', 'en','zh', 'id'];
++      params.translationTargetLanguages = ['es', 'ko', 'en', 'zh', 'id'];
+       params.message = message.trim();
+ 
+       return new Promise<void>((resolve) => {
+@@ -417,6 +449,10 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+       }
+     };
+ 
++    channelHandler.onTypingStatusUpdated = (channel) => {
++      setTypingMembers(channel.getTypingMembers());
++    };
++
+     const metaDataEventHandler = (targetChannel, metaData) => {
+       if (isChannelMatching(targetChannel)) {
+         setChannelMetaData((currentMetaData) => ({
+@@ -521,43 +557,51 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+       return [];
+     }
+ 
+-    const items = messages.filter(isMessageVisible).map((message, index, visibleMessages) => {
+-      const isFirstMessageOfDay =
+-        index === visibleMessages.length - 1 || !isSameDay(message.createdAt, visibleMessages[index + 1].createdAt);
+-
+-      const isFollowingSameSender =
+-        index > 0 &&
+-        isSenderSame(visibleMessages[index - 1], message) &&
+-        isFAQBotAnswer(message) === isFAQBotAnswer(visibleMessages[index - 1]);
+-
+-      const isFollowedBySameSender =
+-        index < visibleMessages.length - 1 &&
+-        isSenderSame(message, visibleMessages[index + 1]) &&
+-        isFAQBotAnswer(message) === isFAQBotAnswer(visibleMessages[index + 1]);
+-
+-      const isFollowedBySameTimestamp =
+-        index < visibleMessages.length - 1 &&
+-        intlDateTimeFormat.format(message.createdAt) ===
+-          intlDateTimeFormat.format(visibleMessages[index + 1].createdAt);
+-
+-      const isFollowingSameTimestamp =
+-        index > 0 &&
+-        intlDateTimeFormat.format(message.createdAt) ===
+-          intlDateTimeFormat.format(visibleMessages[index - 1].createdAt);
+-
+-      const key = getMessageId(message);
+-
+-      return {
+-        key,
+-        message,
+-        isFirstMessageOfDay,
+-        isFollowingSameSender,
+-        isFollowedBySameSender,
+-        isFollowedBySameTimestamp,
+-        isFollowingSameTimestamp,
+-        isTimestampVisible: false,
+-      };
+-    });
++    const items: MessageListItem[] = [...typingMembers, ...messages]
++      .filter(isMessageVisible)
++      .map((source, index, visibleMessages) => {
++        const createdAt = getCreatedAt(source);
++        const userId = getSenderId(source);
++        const isFirstMessageOfDay =
++          index === visibleMessages.length - 1 || !isSameDay(createdAt, getCreatedAt(visibleMessages[index + 1]));
++
++        const isFollowingSameSender =
++          index > 0 &&
++          isSenderSame(visibleMessages[index - 1], source) &&
++          isFAQBotAnswer(source) === isFAQBotAnswer(visibleMessages[index - 1]);
++
++        const isFollowedBySameSender =
++          index < visibleMessages.length - 1 &&
++          isSenderSame(source, visibleMessages[index + 1]) &&
++          isFAQBotAnswer(source) === isFAQBotAnswer(visibleMessages[index + 1]);
++
++        const isFollowedBySameTimestamp =
++          index < visibleMessages.length - 1 &&
++          intlDateTimeFormat.format(createdAt) === intlDateTimeFormat.format(getCreatedAt(visibleMessages[index + 1]));
++
++        const isFollowingSameTimestamp =
++          index > 0 &&
++          intlDateTimeFormat.format(createdAt) === intlDateTimeFormat.format(getCreatedAt(visibleMessages[index - 1]));
++
++        const key = getMessageId(source);
++
++        const message = 'messageId' in source ? source : null;
++        const typingMember = 'userId' in source ? source : null;
++
++        return {
++          key,
++          message,
++          typingMember,
++          createdAt,
++          userId,
++          isFirstMessageOfDay,
++          isFollowingSameSender,
++          isFollowedBySameSender,
++          isFollowedBySameTimestamp,
++          isFollowingSameTimestamp,
++          isTimestampVisible: false,
++        };
++      });
+ 
+     items.forEach((item, index) => {
+       if (item.isFirstMessageOfDay && item.isFollowedBySameSender) {
+@@ -569,20 +613,14 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+     });
+ 
+     [...items].reverse().forEach((item, index, reversedItems) => {
+-      const { message } = item;
++      const { createdAt, userId } = item;
+ 
+       const isTimestampChanged =
+-        intlDateTimeFormat.format(message.createdAt) !==
+-        intlDateTimeFormat.format(reversedItems[index - 1]?.message.createdAt);
++        intlDateTimeFormat.format(createdAt) !== intlDateTimeFormat.format(reversedItems[index - 1]?.createdAt);
+ 
+-      const isSenderSame =
+-        index > 0 &&
+-        (message as SendBird.UserMessage).sender?.userId ===
+-          (reversedItems[index - 1].message as SendBird.UserMessage).sender?.userId;
++      const isSenderSame = index > 0 && userId === reversedItems[index - 1]?.userId;
+ 
+-      if ((item.message.messageId as any) === 'typing') {
+-        item.isTimestampVisible = false;
+-      } else if (isTimestampChanged || !isSenderSame) {
++      if (isTimestampChanged || !isSenderSame) {
+         item.isTimestampVisible = true;
+       } else if (isSenderSame && reversedItems[index - 1].isTimestampVisible) {
+         item.isTimestampVisible = true;
+@@ -591,7 +629,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+     });
+ 
+     return items;
+-  }, [channel, messages]);
++  }, [channel, messages, typingMembers]);
+ 
+   const isSendingFileDisabled = messageInputType !== 'CHAT' || !channel;
+   const getTranslatedMessage = useTranslatedMessage();
+@@ -667,30 +705,35 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+               return null;
+             }
+ 
+-            if (item.message.isAdminMessage() && isCenteredAdminMessage(item.message, channel)) {
++            const { message, typingMember, ...restProps } = item;
++
++            if (message?.isAdminMessage() && isCenteredAdminMessage(message, channel)) {
+               return (
+                 <ListItemWrapper>
+-                  <CenteredAdminMessage message={getTranslatedMessage(item.message)} />
++                  <CenteredAdminMessage message={getTranslatedMessage(message)} />
+                 </ListItemWrapper>
+               );
+             }
+ 
+             if (
+-              item.message.isAdminMessage() &&
++              message?.isAdminMessage() &&
+               [messageCustomTypes.couldNotRecognize, messageCustomTypes.adminMessageBox].includes(
+-                item.message.customType as any,
++                message.customType as any,
+               )
+             ) {
+               return (
+                 <ListItemWrapper>
+-                  <CouldNotRecognizeMessage>{item.message.message}</CouldNotRecognizeMessage>
++                  <CouldNotRecognizeMessage>{message.message}</CouldNotRecognizeMessage>
+                 </ListItemWrapper>
+               );
+             }
+ 
+             return (
+               <ListItemWrapper>
+-                <ChatMessage channel={channel} showImagePreview={setImageModalUri} {...item} />
++                {message && (
++                  <ChatMessage channel={channel} showImagePreview={setImageModalUri} message={message} {...restProps} />
++                )}
++                {typingMember && <TypingIndicatorBubble typingMember={typingMember} {...restProps} />}
+               </ListItemWrapper>
+             );
+           }}
+diff --git a/utils/desk.js b/utils/desk.js
+index 9c5bc60..c04db01 100644
+--- a/utils/desk.js
++++ b/utils/desk.js
+@@ -4,24 +4,28 @@ import { parseMessageData } from './dataUtils';
+ import { sendbird } from './sendbird';
+ 
+ export function isMessageVisible(message) {
+-  const data = parseMessageData(message.data);
++  try {
++    const data = parseMessageData(message.data);
+ 
+-  message.isSystemMessage = message.customType === 'SENDBIRD_DESK_ADMIN_MESSAGE_CUSTOM_TYPE';
+-  message.isAssigned = data?.type === SendBirdDesk.Message.DataType.TICKET_ASSIGN;
+-  message.isTransferred = data?.type === SendBirdDesk.Message.DataType.TICKET_TRANSFER;
+-  message.isClosed = data?.type === SendBirdDesk.Message.DataType.TICKET_CLOSE;
+-  const isFirstJoinedAutoMessage =
+-    message.customType === 'SENDBIRD:AUTO_EVENT_MESSAGE' &&
+-    data?.type === 'USER_JOIN' &&
+-    data?.users.some((user) => user.user_id === sendbird.currentUser.userId);
++    message.isSystemMessage = message.customType === 'SENDBIRD_DESK_ADMIN_MESSAGE_CUSTOM_TYPE';
++    message.isAssigned = data?.type === SendBirdDesk.Message.DataType.TICKET_ASSIGN;
++    message.isTransferred = data?.type === SendBirdDesk.Message.DataType.TICKET_TRANSFER;
++    message.isClosed = data?.type === SendBirdDesk.Message.DataType.TICKET_CLOSE;
++    const isFirstJoinedAutoMessage =
++      message.customType === 'SENDBIRD:AUTO_EVENT_MESSAGE' &&
++      data?.type === 'USER_JOIN' &&
++      data?.users.some((user) => user.user_id === sendbird.currentUser.userId);
+ 
+-  return (
+-    !message.isSystemMessage &&
+-    !message.isAssigned &&
+-    !message.isTransferred &&
+-    !message.isClosed &&
+-    !isFirstJoinedAutoMessage
+-  );
++    return (
++      !message.isSystemMessage &&
++      !message.isAssigned &&
++      !message.isTransferred &&
++      !message.isClosed &&
++      !isFirstJoinedAutoMessage
++    );
++  } catch {
++    return true;
++  }
+ }
+ 
+ export function isFAQBotAnswer(message) {
+-- 
+2.36.1
+

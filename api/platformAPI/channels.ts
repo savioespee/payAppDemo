@@ -128,6 +128,14 @@ export async function deleteAllGroupChannels(userId: string) {
   );
 }
 
+export async function startTypingIndicator(channelUrl: string, userIds: string[]) {
+  await chatAxios.post(`/v3/group_channels/${channelUrl}/typing`, { user_ids: userIds });
+}
+
+export async function stopTypingIndicator(channelUrl: string, userIds: string[]) {
+  await chatAxios.delete(`/v3/group_channels/${channelUrl}/typing`, { data: { user_ids: userIds } });
+}
+
 export async function create1On1Channel(
   userId: string,
   otherUserId: string,

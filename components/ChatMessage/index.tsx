@@ -25,6 +25,7 @@ import Image from '../Image';
 import OrderConfirmation from '../OrderConfirmation';
 import Text from '../Text';
 import BillSplitting from './BillSplitting';
+import chatMessageStyles from './chatMessageStyles';
 import FilePreview from './FilePreview';
 import isMyMessage from './isMyMessage';
 import MessageFooter from './MessageFooter';
@@ -109,7 +110,7 @@ function ChatMessage({
         />
       );
     }
-    
+
     if (
       parsedData &&
       ([messageCustomTypes.csat, messageCustomTypes.csat5] as string[]).includes(message.customType || '') &&
@@ -117,7 +118,7 @@ function ChatMessage({
     ) {
       return (
         <CSAT
-        type={message.customType === messageCustomTypes.csat5 ? '5-scale' : 'binary'}
+          type={message.customType === messageCustomTypes.csat5 ? '5-scale' : 'binary'}
           score={parsedData.csat}
           question={getTranslatedMessage(message)}
           onSelect={async (score) => {
@@ -239,12 +240,8 @@ function ChatMessage({
     return (
       <View
         style={[
-          _styles.messageRow,
-          {
-            flexDirection: _isMyMessage ? 'row-reverse' : 'row',
-            paddingHorizontal: 8,
-            alignItems: 'flex-end',
-          },
+          chatMessageStyles.messageRow,
+          { flexDirection: _isMyMessage ? 'row-reverse' : 'row' },
           _isMyMessage && { marginLeft: 8 },
           (message.reactions?.length ?? 0) > 0 && { paddingBottom: 22 },
         ]}
@@ -253,12 +250,12 @@ function ChatMessage({
           <Avatar
             user={(message as SendBird.UserMessage).sender || undefined}
             size={28}
-            style={[_styles.avatar, { opacity: isAvatarHidden ? 0 : 1 }]}
+            style={[chatMessageStyles.avatar, { opacity: isAvatarHidden ? 0 : 1 }]}
           />
         )}
         <View
           style={[
-            _styles.messageTextWrapper,
+            chatMessageStyles.messageTextWrapper,
             {
               alignItems: _isMyMessage ? 'flex-end' : 'flex-start',
             },
@@ -320,13 +317,7 @@ function ChatMessage({
   return (
     <View>
       {isFirstMessageOfDay && (
-        <Text
-          style={{
-            textAlign: 'center',
-            color: rgba('black', 0.7),
-            paddingVertical: 18,
-          }}
-        >
+        <Text style={chatMessageStyles.dateLine}>
           {(isThisYear(message.createdAt) ? intlDateLineFormat : intlDateLineLastYearFormat).format(message.createdAt)}
         </Text>
       )}
@@ -337,17 +328,6 @@ function ChatMessage({
 }
 
 const _styles = StyleSheet.create({
-  avatar: {
-    marginHorizontal: 8,
-    marginBottom: 3,
-  },
-  messageRow: {
-    display: 'flex',
-  },
-  messageTextWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
   bubble: {
     borderRadius: 18,
     paddingHorizontal: 12,

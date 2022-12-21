@@ -1,12 +1,11 @@
 import { LayoutAnimation, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { colors } from '../../constants';
 import styles from '../../styles';
 import Bubble from '../bubbles/Bubble';
 import useBubbleMaxWidth from '../bubbles/useBubbleMaxWidth';
 import Image from '../Image';
 import Text from '../Text';
-import chatMessageStyles from './styles';
+import chatMessageStyles from './chatMessageStyles';
 
 const BillSplitting = ({
   sender,

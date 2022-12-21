@@ -1,0 +1,64 @@
+From ac417f9cf738c2adcbecf67cb516bc59ee6e20ee Mon Sep 17 00:00:00 2001
+From: Alan Choi <alan.choi@sendbird.com>
+Date: Thu, 15 Dec 2022 14:52:04 -0800
+Subject: [PATCH] improve ux
+
+---
+ api/utils.ts                |  4 ++--
+ components/ChatUI/index.tsx | 10 +++++++++-
+ 2 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/api/utils.ts b/api/utils.ts
+index d0be871..8200673 100644
+--- a/api/utils.ts
++++ b/api/utils.ts
+@@ -28,9 +28,9 @@ export const typeAndSendMessage = async ({
+ 
+   if (messageParams.message_type === 'MESG' && userId) {
+     const startTime = Date.now();
+-    await startTypingIndicator(channelUrl, [userId]);
++    startTypingIndicator(channelUrl, [userId]);
+     await delay(typingDuration - (Date.now() - startTime));
+-    await stopTypingIndicator(channelUrl, [userId]);
++    stopTypingIndicator(channelUrl, [userId]);
+   }
+   return sendMessageAndTranslate(channelUrl, messageParams);
+ };
+diff --git a/components/ChatUI/index.tsx b/components/ChatUI/index.tsx
+index a5da6e1..777666a 100644
+--- a/components/ChatUI/index.tsx
++++ b/components/ChatUI/index.tsx
+@@ -91,6 +91,13 @@ function getCreatedAt(item: MessageListItemSource) {
+   return 'userId' in item ? Date.now() : item.createdAt;
+ }
+ 
++function isSubsequentMessage(item1: MessageListItemSource, item2: MessageListItemSource) {
++  if ('userId' in item1 || 'userId' in item2) {
++    return true;
++  }
++  return Math.abs(getCreatedAt(item1) - getCreatedAt(item2)) < 1000 * 60 * 10;
++}
++
+ function isSenderSame(message1?: MessageListItemSource, message2?: MessageListItemSource) {
+   if (!message1 || !message2) {
+     return false;
+@@ -106,7 +113,7 @@ function isSenderSame(message1?: MessageListItemSource, message2?: MessageListIt
+ 
+   const isUserIdEqual = getSenderId(message1) === getSenderId(message2);
+ 
+-  const isMessagesClose = Math.abs(getCreatedAt(message1) - getCreatedAt(message2)) < 1000 * 60 * 10;
++  const isMessagesClose = isSubsequentMessage(message1, message2);
+ 
+   return isUserIdEqual && isMessagesClose;
+ }
+@@ -450,6 +457,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
+     };
+ 
+     channelHandler.onTypingStatusUpdated = (channel) => {
++      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+       setTypingMembers(channel.getTypingMembers());
+     };
+ 
+-- 
+2.36.1
+

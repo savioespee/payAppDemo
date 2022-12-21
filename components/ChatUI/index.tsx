@@ -2,6 +2,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { isSameDay } from 'date-fns';
 import {
   forwardRef,
+  Key,
   useCallback,
   useContext,
   useEffect,
@@ -13,6 +14,7 @@ import {
 import { FlatList, Keyboard, LayoutAnimation, Platform, StyleSheet, TextInputProps, View } from 'react-native';
 import ImageView from 'react-native-image-viewing';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import SendBird from 'sendbird';
 
 import { setChannelState } from '../../api/ChannelStateUtils';
 import handleUserSentMessage from '../../api/handleUserSentMessage';
@@ -35,6 +37,7 @@ import { getScenarioDataFromCustomChannelType, handleChannelStateEvent } from '.
 import { sendbird } from '../../utils/sendbird';
 import BotResponseOptions from '../BotResponseOptions';
 import ChatMessage from '../ChatMessage';
+import TypingIndicatorBubble from '../ChatMessage/TypingIndicatorBubble';
 import CircleProgress from '../CircleProgress';
 import KeyboardAvoidingView from '../KeyboardAvoidingView';
 import KeypadModal from '../KeypadModal';
@@ -50,6 +53,20 @@ import openImagePicker from './openImagePicker';
 import SendButton from './SendButton';
 import SendFileButton from './SendFileButton';
 
+type MessageListItem = {
+  key: Key;
+  message: Message | null;
+  typingMember: SendBird.Member | null;
+  createdAt: number;
+  userId: string | undefined;
+  isFirstMessageOfDay: boolean;
+  isFollowingSameSender: boolean;
+  isFollowedBySameSender: boolean;
+  isFollowedBySameTimestamp: boolean;
+  isFollowingSameTimestamp: boolean;
+  isTimestampVisible: boolean;
+};
+
 const QUERY_LIMIT = 100;
 
 function createListQuery(channel: SendBird.GroupChannel) {
@@ -60,22 +77,43 @@ function createListQuery(channel: SendBird.GroupChannel) {
   return listQuery;
 }
 
-function isSenderSame(message1?: Message, message2?: Message) {
+type MessageListItemSource = Message | SendBird.Member;
+
+function isAdminMessage(item: MessageListItemSource): item is SendBird.AdminMessage {
+  return 'userId' in item ? false : item.isAdminMessage();
+}
+
+function getSenderId(item: MessageListItemSource) {
+  return 'userId' in item ? item.userId : item.isAdminMessage() ? undefined : item.sender?.userId;
+}
+
+function getCreatedAt(item: MessageListItemSource) {
+  return 'userId' in item ? Date.now() : item.createdAt;
+}
+
+function isSubsequentMessage(item1: MessageListItemSource, item2: MessageListItemSource) {
+  if ('userId' in item1 || 'userId' in item2) {
+    return true;
+  }
+  return Math.abs(getCreatedAt(item1) - getCreatedAt(item2)) < 1000 * 60 * 10;
+}
+
+function isSenderSame(message1?: MessageListItemSource, message2?: MessageListItemSource) {
   if (!message1 || !message2) {
     return false;
   }
 
-  if (message1.isAdminMessage() !== message2.isAdminMessage()) {
+  if (isAdminMessage(message1) !== isAdminMessage(message2)) {
     return false;
   }
 
-  if (message1.isAdminMessage()) {
-    return message1.customType === message2.customType;
+  if (isAdminMessage(message1)) {
+    return message1.customType === (message2 as SendBird.AdminMessage).customType;
   }
 
-  const isUserIdEqual = message1.sender?.userId === (message2 as SendBird.UserMessage).sender?.userId;
+  const isUserIdEqual = getSenderId(message1) === getSenderId(message2);
 
-  const isMessagesClose = Math.abs(message1.createdAt - message2.createdAt) < 1000 * 60 * 10;
+  const isMessagesClose = isSubsequentMessage(message1, message2);
 
   return isUserIdEqual && isMessagesClose;
 }
@@ -131,6 +169,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
   const navigation = useNavigation();
   const { channelUrl } = route.params as { channelUrl: string };
   const [input, setInput] = useState('');
+  const [typingMembers, setTypingMembers] = useState<SendBird.Member[]>([]);
 
   const { startCall, addCallEventListener, removeCallEventListener } = useContext(CallContext);
   const [isSendingFileMessage, setIsSendingFileMessage] = useState(false);
@@ -194,7 +233,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
         version: 'mobile',
         ...(options?.data ? options.data : {}),
       });
-      params.translationTargetLanguages = ['es', 'ko', 'en','zh', 'id'];
+      params.translationTargetLanguages = ['es', 'ko', 'en', 'zh', 'id'];
       params.message = message.trim();
 
       return new Promise<void>((resolve) => {
@@ -417,6 +456,11 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
       }
     };
 
+    channelHandler.onTypingStatusUpdated = (channel) => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setTypingMembers(channel.getTypingMembers());
+    };
+
     const metaDataEventHandler = (targetChannel, metaData) => {
       if (isChannelMatching(targetChannel)) {
         setChannelMetaData((currentMetaData) => ({
@@ -521,43 +565,51 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
       return [];
     }
 
-    const items = messages.filter(isMessageVisible).map((message, index, visibleMessages) => {
-      const isFirstMessageOfDay =
-        index === visibleMessages.length - 1 || !isSameDay(message.createdAt, visibleMessages[index + 1].createdAt);
+    const items: MessageListItem[] = [...typingMembers, ...messages]
+      .filter(isMessageVisible)
+      .map((source, index, visibleMessages) => {
+        const createdAt = getCreatedAt(source);
+        const userId = getSenderId(source);
+        const isFirstMessageOfDay =
+          index === visibleMessages.length - 1 || !isSameDay(createdAt, getCreatedAt(visibleMessages[index + 1]));
 
-      const isFollowingSameSender =
-        index > 0 &&
-        isSenderSame(visibleMessages[index - 1], message) &&
-        isFAQBotAnswer(message) === isFAQBotAnswer(visibleMessages[index - 1]);
+        const isFollowingSameSender =
+          index > 0 &&
+          isSenderSame(visibleMessages[index - 1], source) &&
+          isFAQBotAnswer(source) === isFAQBotAnswer(visibleMessages[index - 1]);
 
-      const isFollowedBySameSender =
-        index < visibleMessages.length - 1 &&
-        isSenderSame(message, visibleMessages[index + 1]) &&
-        isFAQBotAnswer(message) === isFAQBotAnswer(visibleMessages[index + 1]);
+        const isFollowedBySameSender =
+          index < visibleMessages.length - 1 &&
+          isSenderSame(source, visibleMessages[index + 1]) &&
+          isFAQBotAnswer(source) === isFAQBotAnswer(visibleMessages[index + 1]);
 
-      const isFollowedBySameTimestamp =
-        index < visibleMessages.length - 1 &&
-        intlDateTimeFormat.format(message.createdAt) ===
-          intlDateTimeFormat.format(visibleMessages[index + 1].createdAt);
+        const isFollowedBySameTimestamp =
+          index < visibleMessages.length - 1 &&
+          intlDateTimeFormat.format(createdAt) === intlDateTimeFormat.format(getCreatedAt(visibleMessages[index + 1]));
 
-      const isFollowingSameTimestamp =
-        index > 0 &&
-        intlDateTimeFormat.format(message.createdAt) ===
-          intlDateTimeFormat.format(visibleMessages[index - 1].createdAt);
+        const isFollowingSameTimestamp =
+          index > 0 &&
+          intlDateTimeFormat.format(createdAt) === intlDateTimeFormat.format(getCreatedAt(visibleMessages[index - 1]));
 
-      const key = getMessageId(message);
+        const key = getMessageId(source);
 
-      return {
-        key,
-        message,
-        isFirstMessageOfDay,
-        isFollowingSameSender,
-        isFollowedBySameSender,
-        isFollowedBySameTimestamp,
-        isFollowingSameTimestamp,
-        isTimestampVisible: false,
-      };
-    });
+        const message = 'messageId' in source ? source : null;
+        const typingMember = 'userId' in source ? source : null;
+
+        return {
+          key,
+          message,
+          typingMember,
+          createdAt,
+          userId,
+          isFirstMessageOfDay,
+          isFollowingSameSender,
+          isFollowedBySameSender,
+          isFollowedBySameTimestamp,
+          isFollowingSameTimestamp,
+          isTimestampVisible: false,
+        };
+      });
 
     items.forEach((item, index) => {
       if (item.isFirstMessageOfDay && item.isFollowedBySameSender) {
@@ -569,20 +621,14 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
     });
 
     [...items].reverse().forEach((item, index, reversedItems) => {
-      const { message } = item;
+      const { createdAt, userId } = item;
 
       const isTimestampChanged =
-        intlDateTimeFormat.format(message.createdAt) !==
-        intlDateTimeFormat.format(reversedItems[index - 1]?.message.createdAt);
+        intlDateTimeFormat.format(createdAt) !== intlDateTimeFormat.format(reversedItems[index - 1]?.createdAt);
 
-      const isSenderSame =
-        index > 0 &&
-        (message as SendBird.UserMessage).sender?.userId ===
-          (reversedItems[index - 1].message as SendBird.UserMessage).sender?.userId;
+      const isSenderSame = index > 0 && userId === reversedItems[index - 1]?.userId;
 
-      if ((item.message.messageId as any) === 'typing') {
-        item.isTimestampVisible = false;
-      } else if (isTimestampChanged || !isSenderSame) {
+      if (isTimestampChanged || !isSenderSame) {
         item.isTimestampVisible = true;
       } else if (isSenderSame && reversedItems[index - 1].isTimestampVisible) {
         item.isTimestampVisible = true;
@@ -591,7 +637,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
     });
 
     return items;
-  }, [channel, messages]);
+  }, [channel, messages, typingMembers]);
 
   const isSendingFileDisabled = messageInputType !== 'CHAT' || !channel;
   const getTranslatedMessage = useTranslatedMessage();
@@ -667,30 +713,35 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
               return null;
             }
 
-            if (item.message.isAdminMessage() && isCenteredAdminMessage(item.message, channel)) {
+            const { message, typingMember, ...restProps } = item;
+
+            if (message?.isAdminMessage() && isCenteredAdminMessage(message, channel)) {
               return (
                 <ListItemWrapper>
-                  <CenteredAdminMessage message={getTranslatedMessage(item.message)} />
+                  <CenteredAdminMessage message={getTranslatedMessage(message)} />
                 </ListItemWrapper>
               );
             }
 
             if (
-              item.message.isAdminMessage() &&
+              message?.isAdminMessage() &&
               [messageCustomTypes.couldNotRecognize, messageCustomTypes.adminMessageBox].includes(
-                item.message.customType as any,
+                message.customType as any,
               )
             ) {
               return (
                 <ListItemWrapper>
-                  <CouldNotRecognizeMessage>{item.message.message}</CouldNotRecognizeMessage>
+                  <CouldNotRecognizeMessage>{message.message}</CouldNotRecognizeMessage>
                 </ListItemWrapper>
               );
             }
 
             return (
               <ListItemWrapper>
-                <ChatMessage channel={channel} showImagePreview={setImageModalUri} {...item} />
+                {message && (
+                  <ChatMessage channel={channel} showImagePreview={setImageModalUri} message={message} {...restProps} />
+                )}
+                {typingMember && <TypingIndicatorBubble typingMember={typingMember} {...restProps} />}
               </ListItemWrapper>
             );
           }}
