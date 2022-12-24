@@ -233,7 +233,7 @@ const ChatUI = forwardRef<ChatUIImperativeHandle>((props, ref) => {
         version: 'mobile',
         ...(options?.data ? options.data : {}),
       });
-      params.translationTargetLanguages = ['es', 'ko', 'en', 'zh', 'id'];
+      params.translationTargetLanguages = ['es', 'ko', 'en', 'zh', 'id', 'hi', 'te', 'ta'];
       params.message = message.trim();
 
       return new Promise<void>((resolve) => {

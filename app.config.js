@@ -5,8 +5,8 @@ export default {
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/appPayLogo.png',
-  //owner: 'se-sandbox',
-  owner: 'sb-demo_app',
+  owner: 'se-sandbox',
+  //owner: 'sb-demo_app',
   userInterfaceStyle: 'light',
   extra: { apiHost: process.env.API_HOST },
   plugins: ['@config-plugins/android-jsc-intl'],
@@ -19,8 +19,8 @@ export default {
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
-    //bundleIdentifier: 'com.sendbird.sesandbox.sendpay',
-    bundleIdentifier: 'com.sendbird.salesdemoapp.sendpay',
+    bundleIdentifier: 'com.sendbird.sesandbox.sendpay',
+    //bundleIdentifier: 'com.sendbird.salesdemoapp.sendpay',
   },
   android: {
     adaptiveIcon: {
