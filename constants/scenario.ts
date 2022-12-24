@@ -46,7 +46,11 @@ export const scenario: ScenarioData = {
           after: { targetState: 'AlexReplies1' },
         },
         AlexReplies1: {
-          suggestedReplies: [['Confirm', 'botChecksIssue'], 'Cancel'],
+          suggestedReplies: [['Confirm', 'AlexReplies2'], 'Cancel'],
+        },
+        AlexReplies2: {
+          messages: [
+          ], after: { delay: 1000, targetState: 'botChecksIssue' },
         },
         botChecksIssue: {
           messages: [
@@ -57,34 +61,33 @@ export const scenario: ScenarioData = {
               //data: { localImageName: 'PaymentReceiptShare.png' },
             },
           ],
-          after: { targetState: 'AlexReplies2' },
+          after: { delay: 1000, targetState: 'AlexReplies2' },
         },
-        AlexReplies2: {
-          suggestedReplies: [['Yes', 'AlexReplies2_1'], 'No'],
+        AlexReplies3: {
+          suggestedReplies: [['Yes', 'AlexReplies4'], 'No'],
         },
-        AlexReplies2_1: {
+        AlexReplies4: {
           messages: [
           ], after: { delay: 1000, targetState: 'agentConfirmed' },
         },
         agentConfirmed: {
           messages: [
-
             {
               sender: botUserIds.supportBot,
               content: 'Thank you for the confirmation',
             },
-          ], after: { delay: 3000, targetState: 'AlexReplies3' },
+          ], after: { delay: 3000, targetState: 'AlexReplies5' },
         },
-        AlexReplies3: {
+        AlexReplies5: {
           messages: [
             {
               sender: 'ME',
               content: 'My friend could not see the amount in her account.',
             },
           ],
-          after: { delay: 2000, targetState: 'botReplies2' },
+          after: { delay: 2000, targetState: 'botReplies1' },
         },
-        botReplies2: {
+        botReplies1: {
           messages: [
             {
               sender: botUserIds.supportBot,
@@ -115,12 +118,12 @@ export const scenario: ScenarioData = {
                 ' I would like to let you know that sometimes the transfer may take upto 24 hours. But for the inconvenience caused, we would like to offer you a gift voucher.',
             },
           ],
-          after: { delay: 3000, targetState: 'AlexReplies' },
+          after: { delay: 3000, targetState: 'AlexReplies6' },
           onEntry(context) {
             return leaveChannel(context.channelUrl, botUserIds.supportBot);
           },
         },
-        AlexReplies: {
+        AlexReplies6: {
           messages: [
             {
               sender: 'ME',
