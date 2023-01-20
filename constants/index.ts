@@ -34,7 +34,8 @@ export const languageNames = {
   id: 'Indonesian',
   hi: 'हिन्दी',
   te: 'హిందీ',
-  ta: 'இந்தி'
+  ta: 'இந்தி',
+  ar: 'عربى'
 };
 
 export const asyncStorageKeys = {

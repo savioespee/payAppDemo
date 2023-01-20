@@ -26,7 +26,7 @@ export const channelCustomTypes = {
   audioTest: 'audioTest',
 } as const;
 
-export const translationTargetLanguages = ['es', 'ko', 'en', 'zh', 'id', 'hi', 'te', 'ta'];
+export const translationTargetLanguages = ['es', 'ko', 'en', 'zh', 'id', 'hi', 'te', 'ta', 'ar'];
 
 export const messageCustomTypes = {
   notification: 'notification',

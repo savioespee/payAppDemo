@@ -225,7 +225,7 @@ export default function ChatScreen() {
     <>
       <ChatUI ref={chatUIRef} />
       <SelectionModal
-        options={[languageNames.en, languageNames.es, languageNames.ko, languageNames.zh, languageNames.id, languageNames.hi, languageNames.te, languageNames.ta]}
+        options={[languageNames.en, languageNames.es, languageNames.ko, languageNames.zh, languageNames.id, languageNames.hi, languageNames.te, languageNames.ta, languageNames.ar]}
         selectedOption={languageNames[language] || languageNames.en}
         onSelect={(option) => {
           setIsLanguageModalVisible(false);

@@ -2,7 +2,7 @@ export default {
   name: 'SendPay',
   description: 'Sales vertical demo, Fintech',
   slug: 'SendPay-demo-app',
-  version: '1.0.0',
+  version: '1.0.1',
   orientation: 'portrait',
   icon: './assets/appPayLogo.png',
   owner: 'se-sandbox',

@@ -55,7 +55,7 @@ declare global {
     channelCustomType?: string;
   };
 
-  type MessageTranslations = { en: string; ko: string; es: string; zh: string; id: string; hi: string; te: string; ta: string };
+  type MessageTranslations = { en: string; ko: string; es: string; zh: string; id: string; hi: string; te: string; ta: string, ar: string };
 
   type CarouselItem = {
     type: 'image' | 'text';
